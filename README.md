@@ -1,5 +1,5 @@
 # HANZET-SCRAPER v2.0
-> Universal Polyglot Scraper — Full Stack Architecture
+> Universal Polyglot Scraper — Full Stack Architecture (By Claude)
 > Author: Farhan (海鹏 鸟神 / Hanzet22)
 
 ---
