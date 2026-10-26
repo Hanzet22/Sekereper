@@ -15,7 +15,9 @@ const config = Object.freeze({
   port: positiveInt('PORT', 3131, 65535),
   nodeEnv: process.env.NODE_ENV || 'development',
   adminToken: process.env.ADMIN_TOKEN || '',
-  corsOrigins: (process.env.CORS_ORIGINS || '')
+  corsOrigins: (process.env.CORS_ORIGINS === undefined
+    ? 'http://127.0.0.1:3000,http://localhost:3000'
+    : process.env.CORS_ORIGINS)
     .split(',').map(v => v.trim()).filter(Boolean),
   requestTimeoutMs: positiveInt('REQUEST_TIMEOUT_MS', 15000, 120000),
   maxResponseBytes: positiveInt('MAX_RESPONSE_BYTES', 3000000, 20000000),
