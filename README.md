@@ -29,6 +29,7 @@ A modular HTTP(S) scraping workbench built with Node.js, Express, Cheerio, and P
 - src/services/discovery-parser.js — sitemap/robots parsing
 - src/plugins/index.js — explicit adapter registration contract
 - test/ — Node built-in test suite
+- deprecated/ — archived V2 rate-limiter prototypes; not loaded by V3
 
 ## Security model and limitations
 
@@ -43,6 +44,10 @@ A modular HTTP(S) scraping workbench built with Node.js, Express, Cheerio, and P
 - Dynamic browser byte accounting is best-effort; OS/container limits and firewall rules are recommended for defense in depth.
 - Admin API is disabled unless ADMIN_TOKEN is configured. When enabled, send X-Admin-Token. CORS is not authentication.
 - Never commit secrets. Keep the API on localhost unless you have reviewed deployment boundaries.
+
+## Deprecated historical code
+
+The old V2 rate-limiter prototypes are kept in [deprecated/](./deprecated/) for reference only. V3 uses `src/middleware/rate-limit.js`; archived files are not loaded by the current runtime and should not be treated as supported alternatives.
 
 ## License and attributions
 
