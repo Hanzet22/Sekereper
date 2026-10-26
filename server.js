@@ -5,6 +5,7 @@
  * Secure-by-default entry point. The implementation lives in src/.
  * Only explicitly public HTTP(S) targets are accepted by the scraper.
  */
+require('dotenv').config();
 const { createApp } = require('./src/app');
 const { config } = require('./src/config');
 
