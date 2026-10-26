@@ -122,7 +122,7 @@ async function fetchDynamic(inputUrl) {
   const startUrl = await validateTarget(inputUrl);
   // Pin the validated hostname to the already-checked address to reduce DNS-rebinding risk.
   // Dynamic mode intentionally stays same-origin; cross-origin subresources are blocked.
-  const hostname = startUrl.hostname.replace(/^\\[|\\]$/g, '');
+  const hostname = startUrl.hostname.startsWith('[') ? startUrl.hostname.slice(1, -1) : startUrl.hostname;
   const addresses = startUrl._publicAddresses || [];
   const pinnedAddress = addresses.find(address => net.isIP(address) === 4) || addresses[0];
   const resolverRule = !net.isIP(hostname) && pinnedAddress
