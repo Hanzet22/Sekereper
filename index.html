@@ -63,6 +63,8 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:620px;overflow:auto;b
   function urls() { return $('urls').value.split(/\r?\n/).map(v => v.trim()).filter(Boolean); }
   function apiUrl(path) { return $('api').value.trim().replace(/\/+$/, '') + path; }
   function show(data, status, tag = 'Complete') {
+    const discoveredJobId = data?.job?.id || data?.jobId;
+    if (discoveredJobId) $('jobId').value = discoveredJobId;
     lastOutput = JSON.stringify(data, null, 2);
     $('output').textContent = lastOutput;
     $('status').textContent = status;
