@@ -6,7 +6,7 @@
  * ║  Author: Farhan (海鹏 鸟神 / Hanzet22)                   ║
  * ╚══════════════════════════════════════════════════════════╝
  *
- * Algorithm: Token Bucket (sliding window per IP + per endpoint)
+ * DEPRECATED: historical V2 reference only; do not wire into V3.\n * Algorithm: Token Bucket (sliding window per IP + per endpoint)
  * Layer 1: Node.js — catches floods, DDoS, IP spam
  * Layer 2: Bucket4j (Java) — per-user quota, API key limits
  */
