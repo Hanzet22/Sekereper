@@ -1,10 +1,9 @@
 'use strict';
 
-const dns = require('node:dns');
 const https = require('node:https');
 const http = require('node:http');
 const { lookup } = require('node:dns/promises');
-const ipaddr = require('ipaddr.js');
+const net = require('node:net');
 const cheerio = require('cheerio');
 const { chromium } = require('playwright');
 const { config } = require('../config');
@@ -121,7 +120,15 @@ async function fetchStatic(inputUrl) {
 
 async function fetchDynamic(inputUrl) {
   const startUrl = await validateTarget(inputUrl);
-  const browser = await chromium.launch({ headless: true });
+  // Pin the validated hostname to the already-checked address to reduce DNS-rebinding risk.
+  // Dynamic mode intentionally stays same-origin; cross-origin subresources are blocked.
+  const hostname = startUrl.hostname.replace(/^\\[|\\]$/g, '');
+  const addresses = startUrl._publicAddresses || [];
+  const pinnedAddress = addresses.find(address => net.isIP(address) === 4) || addresses[0];
+  const resolverRule = !net.isIP(hostname) && pinnedAddress
+    ? `--host-resolver-rules=MAP ${hostname} ${net.isIP(pinnedAddress) === 6 ? '[' + pinnedAddress + ']' : pinnedAddress},EXCLUDE localhost`
+    : null;
+  const browser = await chromium.launch({ headless: true, args: resolverRule ? [resolverRule] : [] });
   try {
     const context = await browser.newContext({ serviceWorkers: 'block', acceptDownloads: false });
     const page = await context.newPage();
@@ -132,6 +139,8 @@ async function fetchDynamic(inputUrl) {
       try {
         const requestUrl = route.request().url();
         if (requestUrl.startsWith('data:') || requestUrl.startsWith('blob:')) return route.continue();
+        const parsedRequest = new URL(requestUrl);
+        if (parsedRequest.origin !== startUrl.origin) return route.abort('blockedbyclient');
         await validateTarget(requestUrl);
         const resourceType = route.request().resourceType();
         if (['media', 'font'].includes(resourceType)) return route.abort();
