@@ -1,117 +1,136 @@
-# HANZET-SCRAPER v3.0
+# HANZET-SCRAPER v3.5.0 — Crawl Orchestrator
 
-A modular HTTP(S) scraping workbench built around **Node.js**, **Express**, **Cheerio**, and **Playwright**. V3 replaces the old mixed frontend/JVM design with a single API runtime and explicit security boundaries.
+A modular HTTP(S) scraping workbench built with Node.js, Express, Cheerio, and Playwright. V3.5 adds bounded crawl jobs, pause/resume/cancel controls, structured exports, feed and discovery parsers, result comparison, and an adapter extension contract.
 
-> Scrape only public resources you are permitted to access. Respect site terms, rate limits, copyright, and applicable law.
+> Use only for public resources you are permitted to access. Respect site terms, robots directives, rate limits, copyright, privacy, and applicable law.
+
+## What's new in v3.5
+
+- Crawl jobs: seed URLs, bounded page count and depth, same-origin default, per-domain delay, progress, pause/resume/cancel, and job result retrieval.
+- Structured exports: JSON, CSV, and NDJSON.
+- Discovery parsers: parse supplied sitemap XML and robots.txt text.
+- Feed parser: parse supplied RSS/Atom XML into structured items.
+- Data comparison: report additions, removals, and changed results.
+- Adapter foundation: explicit host-code registration contract for future parsers.
+- Existing URL safety policy, bounded request bodies, rate limiting, and admin token gating remain central.
 
 ## Architecture
 
-```text
-index.html                 Responsive browser UI (no bundled frontend framework)
-server.js                  Startup + graceful shutdown
-src/
-  app.js                   Express app, API routes, CORS, error handling
-  config.js                Validated environment configuration
-  middleware/rate-limit.js Bounded in-memory per-IP/path limiter
-  security/url-policy.js   HTTP(S), hostname, DNS and public-IP policy
-  services/scraper.js      Static fetch, Playwright mode, HTML extraction
-test/
-  url-policy.test.js       Security regression tests
-```
+- index.html — browser UI
+- server.js — startup and graceful shutdown
+- src/app.js — HTTP API routes and validation
+- src/config.js — validated environment configuration
+- src/middleware/rate-limit.js — bounded in-memory rate limiter
+- src/security/url-policy.js — HTTP(S), DNS and public-IP policy
+- src/services/scraper.js — static fetch, Playwright and extraction
+- src/services/job-manager.js — in-memory crawl lifecycle/orchestration
+- src/services/exporters.js — CSV/NDJSON and comparison helpers
+- src/services/feed-parser.js — RSS/Atom parsing
+- src/services/discovery-parser.js — sitemap/robots parsing
+- src/plugins/index.js — explicit adapter registration contract
+- test/ — Node built-in test suite
 
-### Security defaults
+## Security model and limitations
 
-- Binds to `127.0.0.1` by default; change `HOST` only when you understand the exposure.
-- Only HTTP and HTTPS targets on standard ports are accepted.
-- Rejects localhost, local/internal hostnames, credentials in URLs, and DNS answers that include non-public IP addresses.
-- Static requests validate each redirect and use a custom DNS lookup that rejects private/reserved destinations.
-- Dynamic browser requests are intercepted, pinned to the validated target address, and restricted to the same origin; cross-origin subresources, service workers, downloads, fonts, and media are blocked. This intentionally trades some site compatibility for safer browser-mode isolation.
-- JSON request bodies, batch size, response size, redirects, timeouts, and concurrent batch jobs have explicit bounds.
-- Rate limiting uses the socket peer address, not caller-supplied `X-Forwarded-For`.
-- Admin API is disabled unless `ADMIN_TOKEN` is configured. When enabled, use the `X-Admin-Token` header.
-- CORS only allows configured origins. CORS is not authentication; keep the API bound to localhost unless deployed behind a properly configured trusted gateway.
-- Secrets belong in environment variables, never in source control.
+- Binds to 127.0.0.1 by default; change HOST only after reviewing exposure.
+- Only HTTP(S) targets on standard ports are accepted. Local/internal hostnames, URL credentials, and DNS answers containing non-public addresses are rejected.
+- Static requests revalidate redirects and use a custom DNS lookup to reject private/reserved destinations.
+- Dynamic browser requests are restricted to the same origin; cross-origin subresources, service workers, downloads, fonts, and media are blocked. This improves isolation but can break sites relying on third-party scripts or CDNs.
+- Crawl jobs have a maximum of 100 pages, depth 5, bounded seed list, and bounded per-domain delay. Queue and job history are in-memory.
+- Robots and sitemap endpoints parse text/XML supplied by the caller. They do not yet automatically fetch robots.txt or sitemap URLs, and robots rules are not automatically enforced by the crawler. Check site policies before crawling.
+- Adapter registration is a host-code extension interface, not a remote plugin installer. Do not load untrusted code as plugins.
+- Rate limits, crawl history, and results are in-memory and disappear on restart. Use a durable queue/database before production multi-instance deployment.
+- Dynamic browser byte accounting is best-effort; OS/container limits and firewall rules are recommended for defense in depth.
+- Admin API is disabled unless ADMIN_TOKEN is configured. When enabled, send X-Admin-Token. CORS is not authentication.
+- Never commit secrets. Keep the API on localhost unless you have reviewed deployment boundaries.
 
-**Important limitation:** in-memory rate limits reset on restart and are per process. For multi-instance deployments, use a shared store and a trusted proxy configuration. Browser automation is inherently more resource-intensive; deploy with operating-system/container limits and only scrape targets you are authorized to access. DNS and network controls should also be enforced at the host/container firewall for defense in depth.
+## Requirements and setup
 
-## Requirements
+Requirements: Node.js 20+, npm, and Playwright-supported Chromium dependencies.
 
-- Node.js 20 or newer
-- npm
-- Chromium dependencies supported by Playwright
+    npm install
+    npx playwright install chromium
+    cp .env.example .env
+    npm start
 
-## Run locally
+API default: http://127.0.0.1:3131.
 
-```bash
-npm install
-npx playwright install chromium
-cp .env.example .env
-npm start
-```
+Serve the browser UI in another terminal:
 
-API listens at `http://127.0.0.1:3131` by default.
+    npx --yes serve . -l 3000
 
-To open the UI, serve the repository root in a second terminal:
-
-```bash
-npx --yes serve . -l 3000
-```
-
-Then open `http://localhost:3000`. If you use a different frontend origin, add it to `CORS_ORIGINS` in `.env` and restart the API. Do not expose the service publicly without reviewing the security configuration.
+Open http://localhost:3000. Configure CORS_ORIGINS if using a different browser origin.
 
 ## Configuration
 
 | Variable | Default | Purpose |
-|---|---:|---|
-| `HOST` | `127.0.0.1` | Bind address |
-| `PORT` | `3131` | API port |
-| `NODE_ENV` | `development` | Runtime environment |
-| `ADMIN_TOKEN` | unset | Enables protected admin endpoint when set |
-| `CORS_ORIGINS` | localhost:3000 + 127.0.0.1:3000 | Comma-separated exact browser origins |
-| `REQUEST_TIMEOUT_MS` | `15000` | Request/navigation timeout |
-| `MAX_RESPONSE_BYTES` | `3000000` | Static response and rendered HTML limit |
-| `MAX_BATCH_SIZE` | `5` | Maximum URLs per batch (hard cap 10) |
-| `MAX_CONCURRENT_JOBS` | `3` | Concurrent jobs inside a batch |
-| `MAX_REDIRECTS` | `3` | Maximum static redirects |
+|---|---|---|
+| HOST | 127.0.0.1 | Bind address |
+| PORT | 3131 | API port |
+| NODE_ENV | development | Runtime environment |
+| ADMIN_TOKEN | unset | Enables protected admin endpoint |
+| CORS_ORIGINS | http://127.0.0.1:3000,http://localhost:3000 | Exact allowed browser origins |
+| REQUEST_TIMEOUT_MS | 15000 | Request/navigation timeout |
+| MAX_RESPONSE_BYTES | 3000000 | Static response/rendered HTML limit |
+| MAX_BATCH_SIZE | 5 | Batch seed URLs (hard cap 10) |
+| MAX_CONCURRENT_JOBS | 3 | Concurrent workers in a batch |
+| MAX_REDIRECTS | 3 | Maximum static redirects |
 
-## API
+## API reference
 
-### `GET /health`
+### Health and single/batch scraping
 
-Returns status, version, enabled modes, and whether admin routes are configured.
+- GET /health — version, capabilities, and admin configuration status.
+- POST /scrape — JSON body: {"url":"https://example.com","mode":"static"}. Mode can be static or dynamic.
+- POST /scrape/batch — JSON body: {"urls":["https://example.com"],"mode":"static"}. Bounded by configured batch size and concurrency.
 
-### `POST /scrape`
+### Crawl jobs
 
-```json
-{ "url": "https://example.com", "mode": "static" }
-```
+Create a job with JSON:
 
-Set `mode` to `dynamic` to use Playwright. Response contains `success`, `jobId`, `elapsedMs`, `mode`, and extracted `data`.
+    {
+      "urls": ["https://example.com"],
+      "mode": "static",
+      "maxPages": 25,
+      "maxDepth": 2,
+      "sameOrigin": true,
+      "domainDelayMs": 500
+    }
 
-### `POST /scrape/batch`
+- POST /crawl/jobs — create a background crawl (HTTP 202).
+- GET /crawl/jobs — list recent jobs.
+- GET /crawl/jobs/:id — progress and status.
+- POST /crawl/jobs/:id/pause, /resume, or /cancel — lifecycle controls.
+- GET /crawl/jobs/:id/results — JSON results.
+- GET /crawl/jobs/:id/results?format=csv — flattened CSV.
+- GET /crawl/jobs/:id/results?format=ndjson — one JSON result per line.
 
-```json
-{ "urls": ["https://example.com", "https://www.iana.org/domains/reserved"], "mode": "static" }
-```
+Crawling is constrained by page/depth limits and domain delay. Same-origin mode is on by default. Set sameOrigin:false only when you have a clear reason and authorization to follow links across public origins.
 
-Batch requests are bounded by `MAX_BATCH_SIZE` and `MAX_CONCURRENT_JOBS`. Each result reports success or a per-URL error.
+### Data and discovery tools
 
-### `GET /admin/stats`
+- POST /compare — compare previous/current arrays, each capped at 1,000 entries.
+- GET /adapters — list adapters registered by application code.
+- POST /parse/feed — parse supplied RSS/Atom XML in the xml field.
+- POST /parse/sitemap — parse supplied sitemap XML in the xml field.
+- POST /parse/robots — parse supplied robots.txt text in the text field.
 
-Requires `X-Admin-Token: <ADMIN_TOKEN>`. If `ADMIN_TOKEN` is unset, this endpoint remains disabled. The admin surface intentionally does not expose arbitrary IP block/unblock controls.
+These endpoints parse caller-supplied content; they do not fetch arbitrary remote files.
 
-## Tests
+### Admin
 
-```bash
-npm test
-```
+GET /admin/stats requires X-Admin-Token: <ADMIN_TOKEN>. If the token is unset, it returns HTTP 503. The admin API does not expose arbitrary IP block/unblock controls.
 
-Tests use Node's built-in test runner. GitHub Actions runs tests on Node.js 20 and 22.
+## Tests and CI
+
+    npm test
+
+The test suite uses Node's built-in test runner. GitHub Actions runs it on Node.js 20 and 22. A green CI run is necessary but does not replace a local smoke test with Chromium installed.
 
 ## Migration notes
 
-V2 used an inline frontend, Tor proxy support, a custom root-level rate limiter, and a separate Java/Bucket4j concept. V3 no longer wires the Java process or Tor proxy into the request path. The legacy `rateLimiter.js` and `Bucket4jRateLimiter.java` files are retained for historical reference only and are **not imported by V3**. The current runtime is the code under `src/`.
+V2 used an inline frontend, Tor proxy support, a root-level rate limiter, and a separate Java/Bucket4j concept. V3 no longer wires the Java process or Tor proxy into the request path. rateLimiter.js and Bucket4jRateLimiter.java remain historical references and are not imported by the V3 runtime.
 
 ## License
 
-See [LICENSE](LICENSE).
+See LICENSE.
