@@ -7,7 +7,7 @@ const { config } = require('../config');
 
 const jobs = new Map();
 const MAX_STORED_JOBS = 100;
-const MAX_PAGES_PER_JOB = 100;
+const MAX_PAGES_PER_JOB = 100;\nconst MAX_QUEUE_SIZE = 1000;
 const MAX_DEPTH = 5;
 const DEFAULT_DOMAIN_DELAY_MS = 500;
 const MAX_DOMAIN_DELAY_MS = 5000;
@@ -36,7 +36,7 @@ async function createCrawlJob({ urls, mode = 'static', maxPages = 25, maxDepth =
   if (!Number.isInteger(maxDepth) || maxDepth < 0 || maxDepth > MAX_DEPTH) throw new Error(`maxDepth must be 0-${MAX_DEPTH}`);
   if (!Number.isInteger(domainDelayMs) || domainDelayMs < 0 || domainDelayMs > MAX_DOMAIN_DELAY_MS) throw new Error(`domainDelayMs must be 0-${MAX_DOMAIN_DELAY_MS}`);
 
-  const seeds = [];
+  const activeJobs = [...jobs.values()].filter(job => ['queued','running','paused'].includes(job.status)).length;\n  if (activeJobs >= config.maxConcurrentJobs) throw new Error('Concurrent crawl job limit reached; wait for an active job to finish');\n  const seeds = [];
   for (const raw of urls) {
     if (typeof raw !== 'string' || raw.length > 2048) throw new Error('Each seed URL must be a string up to 2048 characters');
     seeds.push(await validateTarget(raw));
