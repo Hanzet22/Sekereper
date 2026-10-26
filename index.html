@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>HANZET-SCRAPER v3.0</title>
+<title>HANZET-SCRAPER v3.5.0</title>
 <style>
 :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#edf2f7;background:#0b1020;font-synthesis:none}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#172746 0,#0b1020 58%);padding:24px}
@@ -24,8 +24,8 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:620px;overflow:auto;b
 <main>
 <header class="hero">
 <div class="eyebrow">Modular scraping workbench</div>
-<h1>HANZET-SCRAPER <span class="pill">v3.0</span></h1>
-<p>Static HTML extraction and optional browser-rendered scraping, with target validation, request limits, bounded response sizes, and safer defaults.</p>
+<h1>HANZET-SCRAPER <span class="pill">v3.5.0</span></h1>
+<p>Static and browser-rendered scraping plus bounded crawl jobs, progress controls, data exports, and feed/discovery parsers.</p>
 </header>
 <div class="notice"><strong>Responsible use:</strong> Only scrape public websites you are allowed to access. Private/internal IPs and non-HTTP(S) targets are blocked by the backend. Do not submit secrets or personal data.</div>
 <div class="grid">
@@ -36,7 +36,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:620px;overflow:auto;b
 <label for="urls">Target URL(s)</label><textarea id="urls" spellcheck="false" placeholder="https://example.com&#10;https://www.iana.org/domains/reserved"></textarea>
 <p class="small">Enter one URL for a single scrape, or one URL per line for batch mode. Batch size is limited by the server configuration.</p>
 <div class="actions"><button id="single">Scrape first URL</button><button class="secondary" id="batch">Run batch</button><button class="secondary" id="health">Check API</button></div>
-<div id="status" class="status" role="status" aria-live="polite"></div>
+<div id="status" class="status" role="status" aria-live="polite"></div>\n<hr style="border-color:#2b3850;margin:22px 0">\n<h3>Crawl Orchestrator</h3>\n<div class="row"><div><label for="maxPages">Max pages (1–100)</label><input id="maxPages" type="number" min="1" max="100" value="25"></div><div><label for="maxDepth">Max depth (0–5)</label><input id="maxDepth" type="number" min="0" max="5" value="2"></div></div>\n<label for="delay">Per-domain delay (ms, 0–5000)</label><input id="delay" type="number" min="0" max="5000" value="500">\n<label><input id="sameOrigin" type="checkbox" checked style="width:auto;margin-right:8px">Stay on seed origin (recommended)</label>\n<div class="actions"><button id="crawl">Start crawl job</button><button class="secondary" id="jobs">List jobs</button></div>
 </section>
 <section class="card">
 <div class="section-title"><h2>Output</h2><span id="result-tag" class="pill">Ready</span></div>
@@ -81,7 +81,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:620px;overflow:auto;b
     const list = urls(); if (!list.length) return show({error:'Enter at least one URL.'}, 'Enter at least one URL.', 'Input needed');
     run('batch','/scrape/batch',() => ({urls:list,mode:$('mode').value}),'Running batch');
   });
-  $('health').addEventListener('click', () => run('health','/health',null,'Checking API'));
+  $('health').addEventListener('click', () => run('health','/health',null,'Checking API'));\n  $('crawl').addEventListener('click', () => {\n    const list = urls(); if (!list.length) return show({error:'Enter at least one seed URL.'}, 'Enter at least one seed URL.', 'Input needed');\n    const payload = {urls:list,mode:$('mode').value,maxPages:Number($('maxPages').value),maxDepth:Number($('maxDepth').value),domainDelayMs:Number($('delay').value),sameOrigin:$('sameOrigin').checked};\n    run('crawl','/crawl/jobs',() => payload,'Creating crawl job');\n  });\n  $('jobs').addEventListener('click', () => run('jobs','/crawl/jobs',null,'Loading crawl jobs'));
   $('copy').addEventListener('click', async () => {
     if (!lastOutput) return;
     try { await navigator.clipboard.writeText(lastOutput); $('status').textContent = 'JSON copied.'; }
