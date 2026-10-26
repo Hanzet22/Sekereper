@@ -1,11 +1,11 @@
 // ╔══════════════════════════════════════════════════════════╗
-// ║  HANZET-SCRAPER — Bucket4j JVM Rate Limiter  v1.0      ║
+// ║  LEGACY V2 ONLY — NOT USED BY HANZET-SCRAPER V3       ║
 // ║  Java + Bucket4j Library                               ║
 // ║  Layer 2 of 2 — per-user quota & API key limits        ║
 // ║  Author: Farhan (海鹏 鸟神 / Hanzet22)                   ║
 // ╚══════════════════════════════════════════════════════════╝
 //
-// Dependencies (pom.xml / build.gradle):
+// DEPRECATED: historical V2 reference only; V3 does not run a JVM service.\n// Do not deploy this standalone endpoint without a separate security review.\n// Dependencies (pom.xml / build.gradle):
 //   io.github.bucket4j:bucket4j-core:8.7.0
 //   io.javalin:javalin:6.1.3          ← lightweight HTTP server
 //   org.slf4j:slf4j-simple:2.0.9
