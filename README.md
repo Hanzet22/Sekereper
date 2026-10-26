@@ -25,7 +25,7 @@ test/
 - Only HTTP and HTTPS targets on standard ports are accepted.
 - Rejects localhost, local/internal hostnames, credentials in URLs, and DNS answers that include non-public IP addresses.
 - Static requests validate each redirect and use a custom DNS lookup that rejects private/reserved destinations.
-- Dynamic browser requests are intercepted and checked before being allowed; service workers, downloads, fonts and media are restricted.
+- Dynamic browser requests are intercepted, pinned to the validated target address, and restricted to the same origin; cross-origin subresources, service workers, downloads, fonts, and media are blocked. This intentionally trades some site compatibility for safer browser-mode isolation.
 - JSON request bodies, batch size, response size, redirects, timeouts, and concurrent batch jobs have explicit bounds.
 - Rate limiting uses the socket peer address, not caller-supplied `X-Forwarded-For`.
 - Admin API is disabled unless `ADMIN_TOKEN` is configured. When enabled, use the `X-Admin-Token` header.
