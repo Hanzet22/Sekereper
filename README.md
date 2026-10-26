@@ -44,6 +44,14 @@ A modular HTTP(S) scraping workbench built with Node.js, Express, Cheerio, and P
 - Admin API is disabled unless ADMIN_TOKEN is configured. When enabled, send X-Admin-Token. CORS is not authentication.
 - Never commit secrets. Keep the API on localhost unless you have reviewed deployment boundaries.
 
+## License and attributions
+
+HANZET-SCRAPER is licensed under **GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later)**. See [LICENSE](./LICENSE) for the complete license text.
+
+The AGPL applies to this project's own copyrightable code. Third-party dependencies and other included materials remain under their respective licenses; see [ATTRIBUTIONS.md](./ATTRIBUTIONS.md). Changing this project's license does not relicense third-party software.
+
+If you modify this program and make it available for users to interact with over a network, review AGPL-3.0 section 13 for the corresponding source-code offer requirements. This project does not provide legal advice.
+
 ## Requirements and setup
 
 Requirements: Node.js 20+, npm, and Playwright-supported Chromium dependencies.
