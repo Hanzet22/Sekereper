@@ -32,6 +32,7 @@ async function validateTarget(input) {
   const hostname = url.hostname.replace(/^\[|\]$/g, '').toLowerCase();
   if (net.isIP(hostname)) {
     if (!isPublicAddress(hostname)) throw new Error('Private, loopback, or reserved IP targets are not allowed');
+    url._publicAddresses = [hostname];
   } else {
     let records;
     try { records = await dns.lookup(hostname, { all: true, verbatim: true }); }
@@ -39,6 +40,7 @@ async function validateTarget(input) {
     if (!records.length || records.some(record => !isPublicAddress(record.address))) {
       throw new Error('Target resolves to a private, loopback, or reserved IP address');
     }
+    url._publicAddresses = records.map(record => record.address);
   }
   url.hash = '';
   return url;
