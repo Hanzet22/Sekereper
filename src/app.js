@@ -5,13 +5,16 @@ const { randomUUID, timingSafeEqual } = require('node:crypto');
 const { config } = require('./config');
 const { rateLimit } = require('./middleware/rate-limit');
 const { scrape } = require('./services/scraper');
+const { createCrawlJob, listJobs, getJob, controlJob, getResults, publicJob } = require('./services/job-manager');
+const { toCSV, toNDJSON, flattenResult, compareResults } = require('./services/exporters');
+const { listAdapters } = require('./plugins');
+const { parseFeed } = require('./services/feed-parser');
 
 function constantTimeTokenMatch(provided, expected) {
   const a = Buffer.from(String(provided || ''));
   const b = Buffer.from(String(expected || ''));
   return a.length === b.length && timingSafeEqual(a, b);
 }
-
 function createApp() {
   const app = express();
   app.disable('x-powered-by');
@@ -20,6 +23,7 @@ function createApp() {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'no-referrer');
     res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('X-Frame-Options', 'DENY');
     next();
   });
   app.use(express.json({ limit: '32kb', strict: true }));
@@ -37,8 +41,8 @@ function createApp() {
   app.use(rateLimit);
 
   app.get('/health', (_req, res) => res.json({
-    status: 'ok', version: '3.0.0',
-    capabilities: { static: true, dynamic: true, batch: true },
+    status: 'ok', version: '3.5.0',
+    capabilities: { static: true, dynamic: true, batch: true, crawlJobs: true, export: ['json','csv','ndjson'], feeds: ['rss','atom'], adapters: true, compare: true },
     security: { publicHttpTargetsOnly: true, adminDisabled: !config.adminToken },
   }));
 
@@ -78,6 +82,60 @@ function createApp() {
     res.json({ success: results.every(r => r.success), count: results.length, results });
   });
 
+  // Long-running bounded crawler. Jobs are in-memory; restart clears the queue and history.
+  app.post('/crawl/jobs', async (req, res) => {
+    const { urls, mode = 'static', maxPages = 25, maxDepth = 2, sameOrigin = true, domainDelayMs = 500 } = req.body || {};
+    if (typeof sameOrigin !== 'boolean') return res.status(400).json({ error: 'sameOrigin must be a boolean' });
+    try {
+      const job = await createCrawlJob({ urls, mode, maxPages, maxDepth, sameOrigin, domainDelayMs });
+      return res.status(202).json({ success: true, job });
+    } catch (error) {
+      return res.status(400).json({ error: error.message || 'Invalid crawl job' });
+    }
+  });
+  app.get('/crawl/jobs', (_req, res) => res.json({ jobs: listJobs() }));
+  app.get('/crawl/jobs/:id', (req, res) => {
+    const job = getJob(req.params.id);
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    res.json({ job: publicJob(job) });
+  });
+  app.post('/crawl/jobs/:id/:action', (req, res) => {
+    if (!['pause','resume','cancel'].includes(req.params.action)) return res.status(400).json({ error: 'Action must be pause, resume, or cancel' });
+    const job = controlJob(req.params.id, req.params.action);
+    if (!job) return res.status(404).json({ error: 'Job not found or action invalid for this job' });
+    res.json({ success: true, job });
+  });
+  app.get('/crawl/jobs/:id/results', (req, res) => {
+    const output = getResults(req.params.id);
+    if (!output) return res.status(404).json({ error: 'Job not found' });
+    const format = String(req.query.format || 'json').toLowerCase();
+    if (format === 'csv') {
+      res.type('text/csv; charset=utf-8');
+      return res.send(toCSV(output.results.map(flattenResult)));
+    }
+    if (format === 'ndjson') {
+      res.type('application/x-ndjson; charset=utf-8');
+      return res.send(toNDJSON(output.results));
+    }
+    if (format !== 'json') return res.status(400).json({ error: 'format must be json, csv, or ndjson' });
+    res.json(output);
+  });
+
+  app.post('/compare', (req, res) => {
+    const { previous, current } = req.body || {};
+    if (!Array.isArray(previous) || !Array.isArray(current) || previous.length > 1000 || current.length > 1000) {
+      return res.status(400).json({ error: 'previous and current must be arrays with at most 1000 entries each' });
+    }
+    res.json(compareResults(previous, current));
+  });
+  app.get('/adapters', (_req, res) => res.json({ adapters: listAdapters() }));
+  app.post('/parse/feed', (req, res) => {
+    const { xml } = req.body || {};
+    if (typeof xml !== 'string') return res.status(400).json({ error: 'xml must be a string' });
+    try { return res.json({ success: true, data: parseFeed(xml) }); }
+    catch (error) { return res.status(400).json({ success: false, error: error.message || 'Feed parse failed' }); }
+  });
+
   function requireAdmin(req, res, next) {
     if (!config.adminToken) return res.status(503).json({ error: 'Admin API is disabled: configure ADMIN_TOKEN to enable it' });
     if (!constantTimeTokenMatch(req.get('x-admin-token'), config.adminToken)) return res.status(401).json({ error: 'Unauthorized' });
@@ -87,6 +145,7 @@ function createApp() {
     uptimeSeconds: Math.round(process.uptime()),
     memory: process.memoryUsage(),
     node: process.version,
+    crawlJobs: listJobs().length,
   }));
 
   app.use((req, res) => res.status(404).json({ error: 'Not found' }));
@@ -97,5 +156,4 @@ function createApp() {
   });
   return app;
 }
-
 module.exports = { createApp };
