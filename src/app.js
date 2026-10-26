@@ -9,6 +9,7 @@ const { createCrawlJob, listJobs, getJob, controlJob, getResults, publicJob } = 
 const { toCSV, toNDJSON, flattenResult, compareResults } = require('./services/exporters');
 const { listAdapters } = require('./plugins');
 const { parseFeed } = require('./services/feed-parser');
+const { parseSitemap, parseRobots } = require('./services/discovery-parser');
 
 function constantTimeTokenMatch(provided, expected) {
   const a = Buffer.from(String(provided || ''));
@@ -129,6 +130,18 @@ function createApp() {
     res.json(compareResults(previous, current));
   });
   app.get('/adapters', (_req, res) => res.json({ adapters: listAdapters() }));
+  app.post('/parse/sitemap', (req, res) => {
+    const { xml } = req.body || {};
+    if (typeof xml !== 'string') return res.status(400).json({ error: 'xml must be a string' });
+    try { return res.json({ success: true, data: parseSitemap(xml) }); }
+    catch (error) { return res.status(400).json({ success: false, error: error.message || 'Sitemap parse failed' }); }
+  });
+  app.post('/parse/robots', (req, res) => {
+    const { text } = req.body || {};
+    if (typeof text !== 'string') return res.status(400).json({ error: 'text must be a string' });
+    try { return res.json({ success: true, data: parseRobots(text) }); }
+    catch (error) { return res.status(400).json({ success: false, error: error.message || 'robots.txt parse failed' }); }
+  });
   app.post('/parse/feed', (req, res) => {
     const { xml } = req.body || {};
     if (typeof xml !== 'string') return res.status(400).json({ error: 'xml must be a string' });
