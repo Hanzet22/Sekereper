@@ -1,12 +1,10 @@
 {
   "name": "hanzet-scraper",
-  "version": "3.0.0",
+  "version": "3.5.0",
   "private": true,
-  "description": "Modular HTTP(S) scraper with SSRF protections and bounded resource usage",
+  "description": "Modular HTTP(S) crawler and scraper with bounded jobs, exports, and SSRF protections",
   "main": "server.js",
-  "engines": {
-    "node": ">=20"
-  },
+  "engines": { "node": ">=20" },
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
