@@ -1,132 +1,117 @@
-# HANZET-SCRAPER v2.0
-> Universal Polyglot Scraper — Full Stack Architecture (By Claude)
-> Author: Hanzet22
+# HANZET-SCRAPER v3.0
 
----
+A modular HTTP(S) scraping workbench built around **Node.js**, **Express**, **Cheerio**, and **Playwright**. V3 replaces the old mixed frontend/JVM design with a single API runtime and explicit security boundaries.
 
-## 🏗️ Architecture
+> Scrape only public resources you are permitted to access. Respect site terms, rate limits, copyright, and applicable law.
 
-```
-index.html (Universal Orchestrator)
-├── HYBRID IN-BROWSER
-│   ├── HTML5 + CSS3
-│   ├── TypeScript (Babel inline transpile)
-│   ├── React 18 (CDN) — Stats Panel
-│   ├── Vue 3 (CDN) — Batch Manager
-│   ├── MathML (native HTML5)
-│   ├── KaTeX (CDN) — fast math
-│   ├── MathJax (CDN) — full LaTeX
-│   └── XML/XHTML data layer (JS parsed)
-│
-├── BACKEND (fetch → localhost:3131)
-│   ├── Node.js + Express
-│   ├── Layer 1: Custom Token Bucket Middleware
-│   ├── Cheerio (static scrape)
-│   ├── Playwright Chromium (dynamic scrape)
-│   └── Tor SOCKS5 (socks5h://127.0.0.1:9050)
-│
-├── JVM BACKEND (fetch → localhost:8080)
-│   ├── Java + Javalin HTTP server
-│   ├── Layer 2: Bucket4j Token Bucket
-│   ├── Per-user quota + API key limits
-│   └── Auto-block after 50 violations
-│
-└── GITHUB MODULES (dynamic script load)
-    ├── Hopper v2.1.1 (proxy hop)
-    └── Heap Guard v1.1 (memory guard)
+## Architecture
+
+```text
+index.html                 Responsive browser UI (no bundled frontend framework)
+server.js                  Startup + graceful shutdown
+src/
+  app.js                   Express app, API routes, CORS, error handling
+  config.js                Validated environment configuration
+  middleware/rate-limit.js Bounded in-memory per-IP/path limiter
+  security/url-policy.js   HTTP(S), hostname, DNS and public-IP policy
+  services/scraper.js      Static fetch, Playwright mode, HTML extraction
+test/
+  url-policy.test.js       Security regression tests
 ```
 
----
+### Security defaults
 
-## 🛡️ Double Rate Limiting
+- Binds to `127.0.0.1` by default; change `HOST` only when you understand the exposure.
+- Only HTTP and HTTPS targets on standard ports are accepted.
+- Rejects localhost, local/internal hostnames, credentials in URLs, and DNS answers that include non-public IP addresses.
+- Static requests validate each redirect and use a custom DNS lookup that rejects private/reserved destinations.
+- Dynamic browser requests are intercepted and checked before being allowed; service workers, downloads, fonts and media are restricted.
+- JSON request bodies, batch size, response size, redirects, timeouts, and concurrent batch jobs have explicit bounds.
+- Rate limiting uses the socket peer address, not caller-supplied `X-Forwarded-For`.
+- Admin API is disabled unless `ADMIN_TOKEN` is configured. When enabled, use the `X-Admin-Token` header.
+- CORS only allows configured origins. CORS is not authentication; keep the API bound to localhost unless deployed behind a properly configured trusted gateway.
+- Secrets belong in environment variables, never in source control.
 
-| Layer | Technology | Scope | Limit |
-|-------|-----------|-------|-------|
-| 1 | Node.js Token Bucket | Per IP + Per Endpoint | 10 req/min (/scrape) |
-| 2 | Bucket4j (Java) | Per User + API Key | 15 req/min + burst |
+**Important limitation:** in-memory rate limits reset on restart and are per process. For multi-instance deployments, use a shared store and a trusted proxy configuration. Browser automation is inherently more resource-intensive; deploy with operating-system/container limits and only scrape targets you are authorized to access. DNS and network controls should also be enforced at the host/container firewall for defense in depth.
 
----
+## Requirements
 
-## 🚀 Setup
+- Node.js 20 or newer
+- npm
+- Chromium dependencies supported by Playwright
 
-### 1. Node.js Backend
+## Run locally
+
 ```bash
-cd hanzet-scraper
-npm install express cors cheerio axios playwright socks-proxy-agent
+npm install
 npx playwright install chromium
-node server.js
-# → http://localhost:3131
+cp .env.example .env
+npm start
 ```
 
-### 2. JVM Backend (Bucket4j)
+API listens at `http://127.0.0.1:3131` by default.
+
+To open the UI, serve the repository root in a second terminal:
+
 ```bash
-cd hanzet-scraper/jvm
-gradle run
-# → http://localhost:8080
+npx --yes serve . -l 3000
 ```
 
-### 3. Tor (optional)
+Then open `http://localhost:3000`. If you use a different frontend origin, add it to `CORS_ORIGINS` in `.env` and restart the API. Do not expose the service publicly without reviewing the security configuration.
+
+## Configuration
+
+| Variable | Default | Purpose |
+|---|---:|---|
+| `HOST` | `127.0.0.1` | Bind address |
+| `PORT` | `3131` | API port |
+| `NODE_ENV` | `development` | Runtime environment |
+| `ADMIN_TOKEN` | unset | Enables protected admin endpoint when set |
+| `CORS_ORIGINS` | localhost:3000 + 127.0.0.1:3000 | Comma-separated exact browser origins |
+| `REQUEST_TIMEOUT_MS` | `15000` | Request/navigation timeout |
+| `MAX_RESPONSE_BYTES` | `3000000` | Static response and rendered HTML limit |
+| `MAX_BATCH_SIZE` | `5` | Maximum URLs per batch (hard cap 10) |
+| `MAX_CONCURRENT_JOBS` | `3` | Concurrent jobs inside a batch |
+| `MAX_REDIRECTS` | `3` | Maximum static redirects |
+
+## API
+
+### `GET /health`
+
+Returns status, version, enabled modes, and whether admin routes are configured.
+
+### `POST /scrape`
+
+```json
+{ "url": "https://example.com", "mode": "static" }
+```
+
+Set `mode` to `dynamic` to use Playwright. Response contains `success`, `jobId`, `elapsedMs`, `mode`, and extracted `data`.
+
+### `POST /scrape/batch`
+
+```json
+{ "urls": ["https://example.com", "https://www.iana.org/domains/reserved"], "mode": "static" }
+```
+
+Batch requests are bounded by `MAX_BATCH_SIZE` and `MAX_CONCURRENT_JOBS`. Each result reports success or a per-URL error.
+
+### `GET /admin/stats`
+
+Requires `X-Admin-Token: <ADMIN_TOKEN>`. If `ADMIN_TOKEN` is unset, this endpoint remains disabled. The admin surface intentionally does not expose arbitrary IP block/unblock controls.
+
+## Tests
+
 ```bash
-# Linux
-sudo apt install tor && sudo service tor start
-
-# Mac
-brew install tor && brew services start tor
-
-# Manual
-tor &
+npm test
 ```
 
-### 4. Frontend
-```bash
-# Langsung buka index.html di browser
-# atau serve via:
-npx serve .
-# → http://localhost:3000
-```
+Tests use Node's built-in test runner. GitHub Actions runs tests on Node.js 20 and 22.
 
----
+## Migration notes
 
-## 📦 GitHub Modules (Hanzet22/PCAPDROID-JS-FEATURE)
+V2 used an inline frontend, Tor proxy support, a custom root-level rate limiter, and a separate Java/Bucket4j concept. V3 no longer wires the Java process or Tor proxy into the request path. The legacy `rateLimiter.js` and `Bucket4jRateLimiter.java` files are retained for historical reference only and are **not imported by V3**. The current runtime is the code under `src/`.
 
-| Module | File | Version |
-|--------|------|---------|
-| Hopper | Tes-hopper.js | v2.1.1 (fixed) |
-| Heap Guard | Heap-Memory-Guard.js | v1.1 (fixed) |
+## License
 
-Load via dashboard → Module Registry → LOAD button
-
----
-
-## 🔌 Future Modules (GitHub → fetch)
-
-| Language | Runtime | Deploy |
-|----------|---------|--------|
-| PHP | Apache/Nginx | GitHub Actions |
-| C# | .NET | GitHub Actions |
-| Ruby / JRuby | Ruby/JVM | GitHub Actions |
-| Lua | Lua runtime | GitHub Actions |
-| Swift | Linux Swift | GitHub Actions |
-| Scala | JVM | GitHub Actions |
-| Groovy | JVM | GitHub Actions |
-| Clojure | JVM / ClojureScript | GitHub Actions |
-| Jython | JVM | GitHub Actions |
-
----
-
-## 📡 API Endpoints
-
-### Node.js (3131)
-- `POST /scrape` — `{ url, mode: 'static'|'dynamic', tor: bool }`
-- `POST /scrape/batch` — `{ urls: [...], mode, tor }` (max 10)
-- `GET /health`
-- `GET /admin/stats`
-- `POST /admin/block` — `{ ip }`
-- `POST /admin/unblock` — `{ ip }`
-
-### JVM Bucket4j (8080)
-- `POST /ratelimit/check` — `{ userKey, apiKey, endpoint }`
-- `GET /ratelimit/stats`
-- `POST /ratelimit/block` — `{ ip, minutes }`
-- `POST /ratelimit/unblock` — `{ ip }`
-- `GET /health`
+See [LICENSE](LICENSE).
