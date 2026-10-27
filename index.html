@@ -7,50 +7,38 @@
 <meta name="theme-color" content="#080c16">
 <meta name="description" content="HANZET-SCRAPER — a local-first HTTP(S) scraping and crawl workbench.">
 <title>HANZET-SCRAPER v3.5.0</title>
-<style>
-:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#eef3ff;background:#080c16;font-synthesis:none;--bg:#080c16;--panel:rgba(17,25,43,.88);--line:#293650;--muted:#9baac4;--text:#eef3ff;--cyan:#70e1f5;--blue:#7c9cff;--violet:#b69cff;--good:#8de6bd;--danger:#ff9eaa;--radius:20px}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 18% 0%,#172b4b 0,transparent 42%),radial-gradient(ellipse at 90% 12%,#231b42 0,transparent 35%),var(--bg);color:var(--text);padding:0 22px 40px;overflow-x:hidden}
-#ambient{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;opacity:.42;z-index:-1}
-.shell{max-width:1220px;margin:0 auto}.topbar{height:72px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid #263149}.brand{display:flex;align-items:center;gap:11px;font-size:.88rem;font-weight:900;letter-spacing:.1em}.brand-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#70e1f5,#8a9eff 65%,#c6a4ff);color:#09111f;box-shadow:0 0 28px #70e1f533}.top-meta{display:flex;align-items:center;gap:9px}.pill,.status-pill{display:inline-flex;align-items:center;gap:7px;border:1px solid #34435f;background:#121d31;color:#bfefff;border-radius:999px;padding:6px 10px;font-size:.73rem;font-weight:800;white-space:nowrap}.dot{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 10px #8de6bd88}.status-pill[data-state=checking] .dot{background:#f7d58b;box-shadow:0 0 10px #f7d58b88}.status-pill[data-state=offline] .dot{background:var(--danger);box-shadow:0 0 10px #ff9eaa88}.status-pill[data-state=unknown] .dot{background:#93a4bf;box-shadow:none}
-.hero{padding:44px 0 28px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(230px,.6fr);align-items:end;gap:28px}.eyebrow{display:flex;align-items:center;gap:8px;color:var(--cyan);text-transform:uppercase;letter-spacing:.19em;font-size:.72rem;font-weight:900}.eyebrow svg{width:16px;height:16px}h1{font-size:clamp(2.25rem,6vw,4.7rem);line-height:.99;letter-spacing:-.07em;margin:16px 0 15px;font-weight:900}h1 span{background:linear-gradient(100deg,#fff 10%,#a4eaff 55%,#c8b1ff);background-clip:text;-webkit-background-clip:text;color:transparent}.hero p{max-width:690px;color:#afbdd3;line-height:1.75;margin:0;font-size:.98rem}.hero-side{border:1px solid #31415d;border-radius:18px;padding:18px;background:linear-gradient(145deg,#182640c9,#11172abf);box-shadow:0 20px 55px #0002}.side-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:800}.side-value{font-size:1.55rem;font-weight:900;letter-spacing:-.04em;margin:8px 0}.side-note{color:var(--muted);font-size:.8rem;line-height:1.5}
-.notice{display:flex;gap:12px;align-items:flex-start;border:1px solid #3a4a69;background:#111c30d9;padding:14px 16px;border-radius:15px;color:#c5d5ee;font-size:.84rem;line-height:1.6;margin:0 0 22px}.notice svg{width:20px;height:20px;flex:none;color:var(--cyan);margin-top:1px}.notice strong{color:#f0f6ff}
-.workspace{display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);gap:18px;align-items:start}.stack{display:grid;gap:18px}.card{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:0 18px 55px #0002;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:17px}.card-title{display:flex;align-items:center;gap:11px}.iconbox{width:39px;height:39px;border:1px solid #344766;background:#1a2941;border-radius:13px;display:grid;place-items:center;color:var(--cyan);flex:none}.iconbox svg{width:19px;height:19px}h2{font-size:1.05rem;margin:0;letter-spacing:-.025em}h3{font-size:.95rem;margin:0;letter-spacing:-.015em}.subhead{color:var(--muted);font-size:.78rem;margin:5px 0 0;line-height:1.5}.section-rule{border:0;border-top:1px solid #293650;margin:23px 0}
-label{display:block;color:#cbd6e8;font-size:.8rem;font-weight:750;margin:15px 0 7px}input,textarea,select{width:100%;min-width:0;border:1px solid #34435e;background:#0a1120;color:#f5f8ff;border-radius:11px;padding:12px 13px;font:inherit;font-size:.87rem;transition:border-color .18s,box-shadow .18s}textarea{resize:vertical;min-height:104px;line-height:1.55}input::placeholder,textarea::placeholder{color:#687b99}input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-color:var(--cyan)}input[type=checkbox]{width:17px;height:17px;accent-color:#70e1f5;vertical-align:middle;margin:0 8px 0 0}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.hint{color:#8798b3;font-size:.75rem;line-height:1.55;margin:8px 0 0}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}button{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:11px;padding:11px 14px;font:inherit;font-size:.81rem;font-weight:850;cursor:pointer;background:linear-gradient(115deg,#70e1f5,#9baeff);color:#07111e;transition:transform .15s,filter .15s,border-color .15s;min-height:42px}button svg{width:16px;height:16px}button:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}button:active:not(:disabled){transform:translateY(0)}button.secondary{background:#1b2940;color:#e2ebfb;border-color:#354560}button.ghost{background:transparent;color:#aebdd5;border-color:#35435b}button.danger{background:#3a202e;color:#ffc2ca;border-color:#613344}button:disabled{opacity:.48;cursor:wait;transform:none}
-.checkline{display:flex;align-items:center;gap:8px;margin-top:15px;color:#cbd6e8;font-size:.8rem}.checkline label{display:flex;align-items:center;margin:0;font-weight:650}.status{font-size:.8rem;color:#a8bad4;min-height:1.35em;margin-top:12px;overflow-wrap:anywhere}.status[data-kind=error]{color:var(--danger)}.status[data-kind=success]{color:var(--good)}
-.output-card{position:sticky;top:14px}.output-tools{display:flex;flex-wrap:wrap;gap:8px}.output-tools button{padding:9px 11px;min-height:36px;font-size:.75rem}.output-window{position:relative;margin-top:15px;min-height:360px;background:#070b13;border:1px solid #26334a;border-radius:15px;overflow:hidden}.output-window:before{content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,var(--cyan),var(--blue),var(--violet));opacity:.8}pre{margin:0;padding:18px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:580px;min-height:358px;overflow:auto;color:#dbe9ff;font: .79rem/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2}.output-empty{color:#6f819d}.job-progress{margin-top:16px;border:1px solid #293650;background:#0b1220;border-radius:13px;padding:13px}.job-progress-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.78rem}.job-progress-head strong{color:#e7f1ff}.job-progress-head span{color:var(--cyan);font-weight:800}.job-progress progress{display:block;width:100%;height:8px;margin:12px 0 8px;border:0;border-radius:99px;overflow:hidden;appearance:none;-webkit-appearance:none;background:#1e2a40}.job-progress progress::-webkit-progress-bar{background:#1e2a40;border-radius:99px}.job-progress progress::-webkit-progress-value{background:linear-gradient(90deg,var(--cyan),var(--blue),var(--violet));border-radius:99px;transition:width .25s}.job-progress progress::-moz-progress-bar{background:linear-gradient(90deg,var(--cyan),var(--blue),var(--violet));border-radius:99px}.job-progress p{margin:0;color:#8598b5;font-size:.73rem;line-height:1.5;overflow-wrap:anywhere}.job-history{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.job-chip{font-size:.72rem!important;min-height:32px!important;padding:7px 9px!important;text-align:left;max-width:100%;overflow-wrap:anywhere}.job-history-empty{color:#7f91ad;font-size:.75rem;margin:8px 0 0}.output-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;color:#8192ac;font-size:.74rem}.output-foot span{display:inline-flex;align-items:center;gap:6px}.kbd{border:1px solid #35435b;border-radius:5px;padding:2px 5px;font:inherit;color:#aebed5}
-.footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:25px 2px 0;color:#7586a2;font-size:.74rem;line-height:1.6}.footer a{color:#a9caff;text-decoration:none}.footer a:hover{text-decoration:underline}
-@supports (background: paint(hanzet-grid)){body{background-image:paint(hanzet-grid),radial-gradient(ellipse at 18% 0%,#172b4b 0,transparent 42%),radial-gradient(ellipse at 90% 12%,#231b42 0,transparent 35%)}}
-@media(max-width:900px){.hero{grid-template-columns:1fr}.hero-side{display:none}.workspace{grid-template-columns:1fr}.output-card{position:static}.output-window,pre{min-height:280px}}
-@media(max-width:560px){body{padding:0 13px 28px}.topbar{height:62px}.brand{font-size:.74rem;letter-spacing:.06em}.brand-mark{width:32px;height:32px}.top-meta .pill{display:none}.hero{padding:34px 0 23px}h1{font-size:clamp(2.15rem,12vw,3.25rem)}.card{padding:17px;border-radius:17px}.row{grid-template-columns:1fr}.actions button{flex:1 1 auto}.output-tools button{flex:1 1 auto}.notice{font-size:.79rem}.footer{padding-top:20px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}#ambient{display:none}}
-</style>
+<link rel="icon" type="image/svg+xml" href="ui/assets/favicon.svg">
+<link rel="stylesheet" href="ui/css/tailwind.css">
+<link rel="stylesheet" href="ui/css/app.css">
 </head>
 <body>
+<a class="skip-link sr-only" href="#workspace">Skip to workbench</a>
 <canvas id="ambient" aria-hidden="true"></canvas>
 <main class="shell">
 <header class="topbar">
-<div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 17 12 4l8 13M7 12h10M9 17h6"/></svg></span><span>HANZET / LAB</span></div>
+<div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="ui/assets/icons.svg#icon-brand"></use></svg></span><span>HANZET / LAB</span></div>
 <div class="top-meta"><span class="pill">SCRAPER WORKBENCH</span><span id="apiState" class="status-pill" data-state="unknown" role="status" aria-live="polite"><i class="dot"></i><span id="apiStateText">API UNKNOWN</span></span></div>
 </header>
 <section class="hero">
-<div><div class="eyebrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16Z"/></svg> Modular scraping workbench</div>
+<div><div class="eyebrow"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="ui/assets/icons.svg#icon-sparkle"></use></svg> Modular scraping workbench</div>
 <h1><span>HANZET-</span><br><span>SCRAPER</span></h1>
 <p>Inspect public web content, run controlled batch requests, orchestrate bounded crawls, and export structured results — from one clean interface.</p></div>
 <aside class="hero-side"><div class="side-label">Current release</div><div class="side-value">v3.5.0 <span class="pill">STABLE UI</span></div><div class="side-note">Static + browser-rendered scraping · crawl lifecycle controls · JSON, CSV and NDJSON exports.</div></aside>
 </section>
-<div class="notice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 21 7v5c0 5-3.7 8-9 9-5.3-1-9-4-9-9V7l9-4Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg><div><strong>Responsible use &amp; network safety.</strong> Only request public websites you are allowed to access. The backend blocks private/internal targets; respect site terms, rate limits, robots directives, privacy, copyright and applicable law. The interface does not bypass access controls.</div></div>
-<div class="workspace">
+<div class="notice"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="ui/assets/icons.svg#icon-shield-check"></use></svg><div><strong>Responsible use &amp; network safety.</strong> Only request public websites you are allowed to access. The backend blocks private/internal targets; respect site terms, rate limits, robots directives, privacy, copyright and applicable law. The interface does not bypass access controls.</div></div>
+<div class="workspace" id="workspace" tabindex="-1">
 <div class="stack">
 <section class="card">
-<div class="card-head"><div class="card-title"><span class="iconbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4M8 11h6M11 8v6"/></svg></span><div><h2>Scrape request</h2><p class="subhead">Single URL or a newline-separated batch.</p></div></div><span class="pill">01 / FETCH</span></div>
-<label for="api">API base URL</label><input id="api" value="http://127.0.0.1:3131" autocomplete="url" spellcheck="false">
+<div class="card-head"><div class="card-title"><span class="iconbox"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="ui/assets/icons.svg#icon-search-plus"></use></svg></span><div><h2>Scrape request</h2><p class="subhead">Single URL or a newline-separated batch.</p></div></div><span class="pill">01 / FETCH</span></div>
+<label for="api">API base URL</label><input id="api" value="" placeholder="Auto-detect from current origin" autocomplete="url" spellcheck="false">
+<p class="hint">Blank uses this page’s origin. When opened directly as a file, the API fallback is http://127.0.0.1:3131.</p>
 <label for="mode">Rendering mode</label><select id="mode"><option value="static">Static HTML — fast request</option><option value="dynamic">Dynamic — browser-rendered page</option></select>
 <label for="urls">Target URL(s)</label><textarea id="urls" spellcheck="false" placeholder="https://example.com&#10;https://www.iana.org/domains/reserved"></textarea>
 <p class="hint">One URL for a single scrape, or one URL per line for batch mode. Batch size is controlled by server configuration.</p>
-<div class="actions"><button id="single"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 5 11 7-11 7V5Z"/></svg>Scrape first URL</button><button class="secondary" id="batch">Run batch</button><button class="ghost" id="health">Check API</button></div>
+<div class="actions"><button id="single"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="ui/assets/icons.svg#icon-play"></use></svg>Scrape first URL</button><button class="secondary" id="batch">Run batch</button><button class="ghost" id="health">Check API</button></div>
 <div id="status" class="status" role="status" aria-live="polite"></div>
 <hr class="section-rule">
-<div class="card-head"><div class="card-title"><span class="iconbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 4v4m8 4h-4M12 20v-4M4 12h4M9 9l6 6m0-6-6 6"/></svg></span><div><h3>Crawl orchestrator</h3><p class="subhead">Bounded crawl jobs, live progress, and lifecycle controls.</p></div></div><span class="pill">02 / CRAWL</span></div>
+<div class="card-head"><div class="card-title"><span class="iconbox"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="ui/assets/icons.svg#icon-crawl"></use></svg></span><div><h3>Crawl orchestrator</h3><p class="subhead">Bounded crawl jobs, live progress, and lifecycle controls.</p></div></div><span class="pill">02 / CRAWL</span></div>
 <div class="row"><div><label for="maxPages">Maximum pages (1–100)</label><input id="maxPages" type="number" min="1" max="100" value="25"></div><div><label for="maxDepth">Maximum depth (0–5)</label><input id="maxDepth" type="number" min="0" max="5" value="2"></div></div>
 <label for="delay">Per-domain delay (ms, 0–5000)</label><input id="delay" type="number" min="0" max="5000" value="500">
 <div class="checkline"><label><input id="sameOrigin" type="checkbox" checked>Stay on seed origin (recommended)</label></div>
@@ -64,7 +52,7 @@ label{display:block;color:#cbd6e8;font-size:.8rem;font-weight:750;margin:15px 0 
 </div>
 <div class="stack">
 <section class="card output-card">
-<div class="card-head"><div class="card-title"><span class="iconbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 5H5v14h14v-3M9 3h12v12H9z"/><path d="m12 8 2.5 2.5L12 13m3-2.5h3"/></svg></span><div><h2>Response console</h2><p class="subhead">Readable output, live job updates, and correctly typed exports.</p></div></div><span id="result-tag" class="pill">READY</span></div>
+<div class="card-head"><div class="card-title"><span class="iconbox"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="ui/assets/icons.svg#icon-console"></use></svg></span><div><h2>Response console</h2><p class="subhead">Readable output, live job updates, and correctly typed exports.</p></div></div><span id="result-tag" class="pill">READY</span></div>
 <div class="output-tools"><button class="secondary" id="copy">Copy output</button><button class="secondary" id="download">Download result</button><button class="ghost" id="clear">Clear console</button></div>
 <div class="output-window"><pre id="output" aria-label="Scrape output"><span class="output-empty">Waiting for a request…</span>
 
@@ -73,310 +61,14 @@ Run a scrape, batch, or crawl job. Results will appear here.</pre></div>
 <p class="hint">Results are displayed in this browser session. This UI does not persist scraped data to a separate storage service.</p>
 </section>
 <section class="card">
-<div class="card-head"><div class="card-title"><span class="iconbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="8"/></svg></span><div><h3>Interface capabilities</h3><p class="subhead">Progressive visual enhancements, no UI framework.</p></div></div></div>
+<div class="card-head"><div class="card-title"><span class="iconbox"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="ui/assets/icons.svg#icon-capabilities"></use></svg></span><div><h3>Interface capabilities</h3><p class="subhead">Progressive visual enhancements, no UI framework.</p></div></div></div>
 <p class="hint">Built with semantic HTML, responsive CSS, inline SVG icons, Canvas ambience, and optional CSS Houdini Paint Worklet. Houdini and animation effects are decorative enhancements only; core controls work without them.</p>
 </section>
 </div>
 </div>
 <footer class="footer"><span>HANZET-SCRAPER · Research utility · v3.5.0</span><span><a href="https://github.com/Hanzet22/Sekereper" rel="noreferrer">Source on GitHub</a> · Respect robots directives and site policies.</span></footer>
 </main>
-<script>
-(() => {
-  'use strict';
-  const $ = id => document.getElementById(id);
-  let lastOutput = '';
-  let lastOutputType = 'application/json';
-  let lastOutputName = 'hanzet-scraper-result.json';
-  let pollTimer = null;
-  let pollingJobId = null;
-  const activeStatuses = new Set(['queued', 'running', 'paused']);
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  function urls() { return $('urls').value.split(/\r?\n/).map(v => v.trim()).filter(Boolean); }
-  function apiUrl(path) {
-    const base = new URL($('api').value.trim());
-    if (!['http:', 'https:'].includes(base.protocol)) throw new Error('API URL must use HTTP or HTTPS.');
-    return base.href.replace(/\/+$/, '') + path;
-  }
-  function setApiState(state) {
-    const pill = $('apiState');
-    pill.dataset.state = state;
-    $('apiStateText').textContent = 'API ' + state.toUpperCase();
-  }
-  function show(data, status, tag = 'Complete', kind = '', outputType, outputName) {
-    const discoveredJobId = data?.job?.id || data?.jobId;
-    if (discoveredJobId) $('jobId').value = discoveredJobId;
-    if (typeof data === 'string') {
-      lastOutput = data;
-      lastOutputType = outputType || 'text/plain;charset=utf-8';
-      lastOutputName = outputName || 'hanzet-scraper-export.txt';
-    } else {
-      lastOutput = JSON.stringify(data, null, 2);
-      lastOutputType = outputType || 'application/json';
-      lastOutputName = outputName || 'hanzet-scraper-result.json';
-    }
-    $('output').textContent = lastOutput;
-    $('status').textContent = status;
-    $('status').dataset.kind = kind;
-    $('result-tag').textContent = tag.toUpperCase();
-  }
-  async function request(path, body) {
-    const options = body ? {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)} : {};
-    const response = await fetch(apiUrl(path), options);
-    const data = await response.json().catch(() => ({error:'API returned a non-JSON response'}));
-    if (!response.ok) throw new Error(data.error || 'Request failed with HTTP ' + response.status);
-    return data;
-  }
-  function downloadText(text, type, filename) {
-    const blob = new Blob([text], {type});
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url; link.download = filename;
-    document.body.appendChild(link); link.click(); link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1500);
-  }
-  function updateJobProgress(job) {
-    if (!job || !job.id) return;
-    const p = job.progress || {};
-    const visited = Number(p.visited) || 0;
-    const maxPages = Number(p.maxPages) || 1;
-    const finished = ['completed','cancelled','failed'].includes(job.status);
-    const pct = finished ? 100 : Math.min(100, Math.round(visited / maxPages * 100));
-    $('progressStatus').textContent = String(job.status || 'unknown').toUpperCase() + ' · ' + job.id.slice(0, 8);
-    $('progressCounts').textContent = visited + ' / ' + maxPages + ' visited';
-    $('progressBar').value = pct;
-    $('progressBar').setAttribute('aria-label', 'Crawl progress ' + pct + ' percent');
-    const updated = job.updatedAt ? new Date(job.updatedAt).toLocaleTimeString() : 'just now';
-    $('progressMeta').textContent = (Number(p.queued) || 0) + ' queued · ' + (Number(p.succeeded) || 0) + ' succeeded · ' + (Number(p.failed) || 0) + ' failed · updated ' + updated + (job.error ? ' · ' + job.error : '');
-  }
-  function renderJobs(jobs) {
-    const holder = $('jobHistory');
-    holder.replaceChildren();
-    if (!Array.isArray(jobs) || jobs.length === 0) {
-      const empty = document.createElement('p');
-      empty.className = 'job-history-empty';
-      empty.textContent = 'No crawl jobs found.';
-      holder.appendChild(empty);
-      return;
-    }
-    for (const job of jobs.slice(0, 12)) {
-      const progress = job.progress || {};
-      const chip = document.createElement('button');
-      chip.type = 'button';
-      chip.className = 'secondary job-chip';
-      chip.setAttribute('role', 'listitem');
-      chip.textContent = (job.id || 'unknown').slice(0, 8) + ' · ' + (job.status || 'unknown') + ' · ' + (Number(progress.visited) || 0) + '/' + (Number(progress.maxPages) || 0);
-      chip.title = job.id || '';
-      chip.addEventListener('click', () => {
-        $('jobId').value = job.id || '';
-        updateJobProgress(job);
-        if (job.id) refreshJob(job.id);
-      });
-      holder.appendChild(chip);
-    }
-  }
-  function stopPolling() {
-    if (pollTimer !== null) window.clearTimeout(pollTimer);
-    pollTimer = null;
-    pollingJobId = null;
-  }
-  function schedulePolling(id, delay = 1600) {
-    if (pollTimer !== null) window.clearTimeout(pollTimer);
-    pollingJobId = id;
-    pollTimer = window.setTimeout(async () => {
-      if (pollingJobId !== id) return;
-      try {
-        const data = await request('/crawl/jobs/' + encodeURIComponent(id));
-        setApiState('online');
-        if (data.job) {
-          updateJobProgress(data.job);
-          if (activeStatuses.has(data.job.status)) schedulePolling(id);
-          else stopPolling();
-        } else stopPolling();
-      } catch (error) {
-        setApiState('offline');
-        $('progressMeta').textContent = 'Could not refresh this job: ' + error.message;
-        if (pollingJobId === id) schedulePolling(id, 3500);
-      }
-    }, delay);
-  }
-  async function refreshJob(id) {
-    if (!id) return;
-    try {
-      const data = await request('/crawl/jobs/' + encodeURIComponent(id));
-      if (data.job) {
-        updateJobProgress(data.job);
-        if (activeStatuses.has(data.job.status)) schedulePolling(id);
-        else if (pollingJobId === id) stopPolling();
-      }
-    } catch (error) {
-      $('progressMeta').textContent = 'Could not load job: ' + error.message;
-    }
-  }
-  function syncJobData(data) {
-    if (Array.isArray(data?.jobs)) {
-      renderJobs(data.jobs);
-      const selected = $('jobId').value.trim();
-      const current = data.jobs.find(job => job.id === selected);
-      if (current) updateJobProgress(current);
-    }
-    if (data?.job?.id) {
-      const job = data.job;
-      $('jobId').value = job.id;
-      updateJobProgress(job);
-      if (activeStatuses.has(job.status)) schedulePolling(job.id);
-      else if (pollingJobId === job.id) stopPolling();
-    }
-  }
-  async function run(buttonId, path, bodyFactory, label) {
-    const button = $(buttonId);
-    button.disabled = true;
-    $('status').textContent = label + '…';
-    $('status').dataset.kind = '';
-    if (path === '/health') setApiState('checking');
-    try {
-      const data = await request(path, bodyFactory ? bodyFactory() : undefined);
-      if (path === '/health') setApiState(data.status === 'ok' ? 'online' : 'offline');
-      else setApiState('online');
-      show(data, label + ' completed.', 'Complete', 'success');
-      syncJobData(data);
-    } catch (error) {
-      if (path === '/health') setApiState('offline');
-      show({success:false,error:error.message}, 'Request failed: ' + error.message, 'Error', 'error');
-    } finally {
-      button.disabled = false;
-    }
-  }
-
-  $('single').addEventListener('click', () => {
-    const list = urls();
-    if (!list.length) return show({error:'Enter a URL first.'}, 'Enter a URL first.', 'Input needed', 'error');
-    run('single','/scrape',() => ({url:list[0],mode:$('mode').value}),'Scraping');
-  });
-  $('batch').addEventListener('click', () => {
-    const list = urls();
-    if (!list.length) return show({error:'Enter at least one URL.'}, 'Enter at least one URL.', 'Input needed', 'error');
-    run('batch','/scrape/batch',() => ({urls:list,mode:$('mode').value}),'Running batch');
-  });
-  $('health').addEventListener('click', () => run('health','/health',null,'Checking API'));
-  $('api').addEventListener('change', () => setApiState('unknown'));
-  $('crawl').addEventListener('click', () => {
-    const list = urls();
-    if (!list.length) return show({error:'Enter at least one seed URL.'}, 'Enter at least one seed URL.', 'Input needed', 'error');
-    const payload = {
-      urls:list, mode:$('mode').value, maxPages:Number($('maxPages').value),
-      maxDepth:Number($('maxDepth').value), domainDelayMs:Number($('delay').value),
-      sameOrigin:$('sameOrigin').checked
-    };
-    if (!Number.isInteger(payload.maxPages) || payload.maxPages < 1 || payload.maxPages > 100 ||
-        !Number.isInteger(payload.maxDepth) || payload.maxDepth < 0 || payload.maxDepth > 5 ||
-        !Number.isInteger(payload.domainDelayMs) || payload.domainDelayMs < 0 || payload.domainDelayMs > 5000) {
-      return show({error:'Check crawl limits: pages 1–100, depth 0–5, delay 0–5000 ms.'}, 'Check the crawl limits and try again.', 'Input needed', 'error');
-    }
-    run('crawl','/crawl/jobs',() => payload,'Creating crawl job');
-  });
-  $('jobs').addEventListener('click', () => run('jobs','/crawl/jobs',null,'Loading crawl jobs'));
-  function jobAction(action) {
-    const id = $('jobId').value.trim();
-    if (!id) return show({error:'Enter or select a crawl job ID.'}, 'Enter or select a crawl job ID.', 'Input needed', 'error');
-    run(action + 'Job','/crawl/jobs/' + encodeURIComponent(id) + '/' + action,() => ({}),action + ' job');
-  }
-  $('pauseJob').addEventListener('click', () => jobAction('pause'));
-  $('resumeJob').addEventListener('click', () => jobAction('resume'));
-  $('cancelJob').addEventListener('click', () => jobAction('cancel'));
-
-  async function showJobResults(format) {
-    const id = $('jobId').value.trim();
-    if (!id) return show({error:'Enter or select a crawl job ID.'}, 'Enter or select a crawl job ID.', 'Input needed', 'error');
-    try {
-      $('status').textContent = 'Loading crawl results…';
-      const query = format ? '?format=' + encodeURIComponent(format) : '';
-      const response = await fetch(apiUrl('/crawl/jobs/' + encodeURIComponent(id) + '/results' + query));
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || 'HTTP ' + response.status);
-      }
-      setApiState('online');
-      if (format === 'csv' || format === 'ndjson') {
-        const text = await response.text();
-        const type = response.headers.get('content-type') || (format === 'csv' ? 'text/csv;charset=utf-8' : 'application/x-ndjson;charset=utf-8');
-        const filename = 'hanzet-scraper-' + id.slice(0, 8) + '.' + format;
-        show(text, format.toUpperCase() + ' export downloaded.', format, 'success', type, filename);
-        downloadText(text, type, filename);
-      } else {
-        const data = await response.json();
-        show(data, 'Crawl results loaded.', 'Results', 'success');
-        syncJobData(data);
-      }
-    } catch(error) {
-      show({error:error.message}, 'Could not load results: ' + error.message, 'Error', 'error');
-    }
-  }
-  $('jobResults').addEventListener('click', () => showJobResults('json'));
-  $('exportCSV').addEventListener('click', () => showJobResults('csv'));
-  $('exportNDJSON').addEventListener('click', () => showJobResults('ndjson'));
-  $('copy').addEventListener('click', async () => {
-    if (!lastOutput) return;
-    try {
-      await navigator.clipboard.writeText(lastOutput);
-      $('status').textContent = 'Output copied to clipboard.';
-      $('status').dataset.kind = 'success';
-    } catch {
-      $('status').textContent = 'Clipboard unavailable in this browser context.';
-      $('status').dataset.kind = 'error';
-    }
-  });
-  $('download').addEventListener('click', () => {
-    if (!lastOutput) return;
-    downloadText(lastOutput, lastOutputType, lastOutputName);
-  });
-  $('clear').addEventListener('click', () => {
-    lastOutput = '';
-    lastOutputType = 'application/json';
-    lastOutputName = 'hanzet-scraper-result.json';
-    $('output').textContent = 'Console cleared. Run a request to display results.';
-    $('status').textContent = '';
-    $('status').dataset.kind = '';
-    $('result-tag').textContent = 'READY';
-  });
-
-  // Refresh the real API state on open; this does not block UI controls.
-  request('/health').then(data => setApiState(data.status === 'ok' ? 'online' : 'offline')).catch(() => setApiState('offline'));
-
-  // Canvas ambience is decorative and respects reduced-motion preferences.
-  const canvas = $('ambient'), ctx = canvas.getContext && canvas.getContext('2d');
-  if (ctx && !reduceMotion) {
-    let width=0,height=0,points=[];
-    function resize() {
-      const dpr=Math.min(window.devicePixelRatio||1,1.5);
-      width=window.innerWidth; height=window.innerHeight;
-      canvas.width=Math.floor(width*dpr); canvas.height=Math.floor(height*dpr);
-      ctx.setTransform(dpr,0,0,dpr,0,0);
-      const count=Math.min(55,Math.floor(width/24));
-      points=Array.from({length:count},()=>({x:Math.random()*width,y:Math.random()*height,r:Math.random()*1.4+.3,v:Math.random()*.16+.025,a:Math.random()*.35+.08}));
-    }
-    function draw() {
-      ctx.clearRect(0,0,width,height);
-      for(const p of points) {
-        p.y-=p.v;
-        if(p.y< -4) { p.y=height+4; p.x=Math.random()*width; }
-        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-        ctx.fillStyle='rgba(145,196,255,'+p.a+')'; ctx.fill();
-      }
-      requestAnimationFrame(draw);
-    }
-    resize(); window.addEventListener('resize',resize,{passive:true}); draw();
-  }
-  // CSS Houdini is optional: the page keeps its gradient fallback if unavailable.
-  if ('paintWorklet' in CSS && !reduceMotion) {
-    const paintCode = "registerPaint('hanzet-grid', class { paint(ctx, size) { const gap=34; ctx.strokeStyle='rgba(124,156,255,.055)'; ctx.lineWidth=1; for(let x=0;x<size.width;x+=gap){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,size.height);ctx.stroke()} for(let y=0;y<size.height;y+=gap){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(size.width,y);ctx.stroke()} } });";
-    try {
-      const blob=new Blob([paintCode],{type:'text/javascript'});
-      const url=URL.createObjectURL(blob);
-      CSS.paintWorklet.addModule(url).catch(()=>{}).finally(()=>URL.revokeObjectURL(url));
-    } catch (_) { /* Visual enhancement only. */ }
-  }
-})();
-</script>
+<script src="ui/js/ambient-canvas.js" defer></script>
+<script src="ui/js/app.js" defer></script>
 </body>
 </html>

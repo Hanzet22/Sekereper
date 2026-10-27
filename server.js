@@ -12,7 +12,8 @@ const { config } = require('./src/config');
 const app = createApp();
 
 const server = app.listen(config.port, config.host, () => {
-  console.log(`[HANZET-SCRAPER] v3.0 listening on http://${config.host}:${config.port}`);
+  console.log(`[HANZET-SCRAPER] v${require('./package.json').version} listening on http://${config.host}:${config.port}`);
+  console.log(`[HANZET-SCRAPER] UI available at http://${config.host}:${config.port}/`);
 });
 
 function shutdown(signal) {

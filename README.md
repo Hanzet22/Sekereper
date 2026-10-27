@@ -147,3 +147,8 @@ V2 used an inline frontend, Tor proxy support, a root-level rate limiter, and a 
 ## License
 
 See LICENSE.
+
+
+## Frontend architecture
+
+The HTML5 entry point is `index.html`; custom CSS, Tailwind CSS v4 source/output, SVG icons, Canvas animation, and the Houdini Paint Worklet live under `ui/`. Express serves `/` and `/ui/*` from the same origin as the API. Run `npm install` and `npm start`; rebuild or watch Tailwind with `npm run build:ui:css` and `npm run watch:ui:css`. See [ui/README.md](ui/README.md).

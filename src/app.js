@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const path = require('node:path');
 const { randomUUID, timingSafeEqual } = require('node:crypto');
 const { config } = require('./config');
 const { rateLimit } = require('./middleware/rate-limit');
@@ -39,6 +40,16 @@ function createApp() {
     if (req.method === 'OPTIONS') return res.sendStatus(204);
     next();
   });
+
+  // Serve only the HTML5 entry point and dedicated frontend assets.
+  // Do not expose the repository root, which contains source and configuration files.
+  const projectRoot = path.resolve(__dirname, '..');
+  app.get(['/', '/index.html'], (_req, res) => res.sendFile(path.join(projectRoot, 'index.html')));
+  app.use('/ui', express.static(path.join(projectRoot, 'ui'), {
+    dotfiles: 'deny', index: false, fallthrough: true,
+    maxAge: config.nodeEnv === 'production' ? '1h' : 0,
+  }));
+
   app.use(rateLimit);
 
   app.get('/health', (_req, res) => res.json({
