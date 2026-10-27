@@ -2,7 +2,12 @@
 
 function csvCell(value) {
   const text = value == null ? '' : typeof value === 'object' ? JSON.stringify(value) : String(value);
-  return '"' + text.replace(/"/g, '""') + '"';
+  // Spreadsheet cells beginning with formula operators (possibly after control/space
+  // characters) must be treated as text to prevent CSV formula injection.
+  const safeText = /^[\u0000-\u0020]*[=+\-@]/.test(text) || /^[\t\r\n]/.test(text)
+    ? "'" + text
+    : text;
+  return '"' + safeText.replace(/"/g, '""') + '"';
 }
 function toCSV(rows) {
   const records = Array.isArray(rows) ? rows : [];

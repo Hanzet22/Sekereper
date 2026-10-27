@@ -44,10 +44,12 @@ async function createCrawlJob({ urls, mode = 'static', maxPages = 25, maxDepth =
     if (typeof raw !== 'string' || raw.length > 2048) throw new Error('Each seed URL must be a string up to 2048 characters');
     seeds.push(await validateTarget(raw));
   }
+  if (seeds.length > MAX_QUEUE_SIZE) throw new Error(`Provide no more than ${MAX_QUEUE_SIZE} seed URLs`);
   const id = randomUUID();
   const job = {
     id, status: 'queued', mode, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     startedAt: null, finishedAt: null, error: null, queue: seeds.map(url => ({url:url.href,depth:0})),
+    queuedUrls: new Set(seeds.map(url => url.href)), abortController: new AbortController(),
     visited: new Set(), results: [], succeeded: 0, failed: 0, maxPages, maxDepth,
     sameOrigin, seedOrigins: new Set(seeds.map(url => url.origin)), domainDelayMs,
     lastDomainRequest: new Map(), pauseRequested: false, cancelRequested: false, running: false,
@@ -70,6 +72,7 @@ async function runJob(job) {
       }
       if (job.cancelRequested) break;
       const item = job.queue.shift();
+      job.queuedUrls.delete(item.url);
       let normalized;
       try {
         const safe = await validateTarget(item.url);
@@ -85,7 +88,7 @@ async function runJob(job) {
         const wait = job.domainDelayMs - (Date.now() - previous);
         if (wait > 0) await sleep(wait);
         job.lastDomainRequest.set(safe.origin, Date.now());
-        const data = await scrape(normalized, job.mode);
+        const data = await scrape(normalized, job.mode, { signal: job.abortController.signal });
         job.results.push({url:normalized,depth:item.depth,success:true,data});
         job.succeeded++;
         if (item.depth < job.maxDepth) {
@@ -94,15 +97,18 @@ async function runJob(job) {
             try {
               const candidate = await validateTarget(new URL(link.href, normalized).href);
               if (job.sameOrigin && !job.seedOrigins.has(candidate.origin)) continue;
-              if (!job.visited.has(candidate.href) && !job.queue.some(q => q.url === candidate.href)) {
+              if (!job.visited.has(candidate.href) && !job.queuedUrls.has(candidate.href) && job.queue.length < MAX_QUEUE_SIZE) {
                 job.queue.push({url:candidate.href,depth:item.depth+1});
+                job.queuedUrls.add(candidate.href);
               }
             } catch {}
           }
         }
       } catch (error) {
-        job.results.push({url:normalized || item.url,depth:item.depth,success:false,error:error.message || 'Crawl failed'});
-        job.failed++;
+        if (!job.cancelRequested) {
+          job.results.push({url:normalized || item.url,depth:item.depth,success:false,error:error.message || 'Crawl failed'});
+          job.failed++;
+        }
       }
       job.updatedAt = new Date().toISOString();
     }
@@ -127,6 +133,7 @@ function controlJob(id, action) {
   if (!job) return null;
   if (action === 'cancel') {
     job.cancelRequested = true; job.pauseRequested = false;
+    job.abortController.abort();
     if (!job.running && !['completed','failed','cancelled'].includes(job.status)) {
       job.status='cancelled'; job.finishedAt=new Date().toISOString();
     }

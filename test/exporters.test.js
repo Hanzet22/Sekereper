@@ -25,3 +25,27 @@ test('sitemap and robots parsers extract discovery hints', () => {
   assert.equal(robots.groups[0].rules[0].path,'/private');
   assert.equal(robots.sitemaps[0],'https://example.com/sitemap.xml');
 });
+
+
+test('CSV neutralizes spreadsheet formula injection while preserving ordinary values', () => {
+  const csv = toCSV([
+    { value: '=1+1' },
+    { value: '+SUM(A1:A2)' },
+    { value: '  =HYPERLINK("https://example.com")' },
+    { value: '@cmd' },
+    { value: '\t=1+1' },
+    { value: 'ordinary text' },
+    { value: 'quoted "text"' },
+  ]);
+  const expectedCells = [
+    "'=1+1",
+    "'+SUM(A1:A2)",
+    "'  =HYPERLINK(\"https://example.com\")",
+    "'@cmd",
+    "'\t=1+1",
+    "ordinary text",
+    "quoted \"text\"",
+  ];
+  const expectedRows = expectedCells.map(value => '"' + value.replace(/"/g, '""') + '"');
+  assert.deepEqual(csv.split('\r\n').slice(1), expectedRows);
+});
