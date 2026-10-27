@@ -67,6 +67,7 @@ function extractData(html, url) {
 async function fetchStatic(inputUrl, signal) {
   let url = await validateTarget(inputUrl);
   for (let redirects = 0; redirects <= config.maxRedirects; redirects++) {
+    if (signal?.aborted) throw new Error('Scrape cancelled');
     const transport = url.protocol === 'https:' ? https : http;
     const agent = url.protocol === 'https:'
       ? new https.Agent({ lookup: safeLookup, keepAlive: false })
