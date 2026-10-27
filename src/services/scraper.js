@@ -64,7 +64,7 @@ function extractData(html, url) {
   };
 }
 
-async function fetchStatic(inputUrl) {
+async function fetchStatic(inputUrl, signal) {
   let url = await validateTarget(inputUrl);
   for (let redirects = 0; redirects <= config.maxRedirects; redirects++) {
     const transport = url.protocol === 'https:' ? https : http;
@@ -72,7 +72,14 @@ async function fetchStatic(inputUrl) {
       ? new https.Agent({ lookup: safeLookup, keepAlive: false })
       : new http.Agent({ lookup: safeLookup, keepAlive: false });
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), config.requestTimeoutMs);
+    let timedOut = false;
+    if (signal?.aborted) throw new Error('Scrape cancelled');
+    const onAbort = () => controller.abort(new Error('Scrape cancelled'));
+    signal?.addEventListener('abort', onAbort, { once: true });
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      controller.abort(new Error(`Request timed out after ${config.requestTimeoutMs} ms`));
+    }, config.requestTimeoutMs);
     try {
       const response = await new Promise((resolve, reject) => {
         const request = transport.request(url, {
@@ -110,15 +117,20 @@ async function fetchStatic(inputUrl) {
         chunks.push(chunk);
       }
       return extractData(Buffer.concat(chunks).toString('utf8'), url.href);
+    } catch (error) {
+      if (timedOut) throw new Error(`Request timed out after ${config.requestTimeoutMs} ms`);
+      if (signal?.aborted) throw new Error('Scrape cancelled');
+      throw error;
     } finally {
       clearTimeout(timeout);
+      signal?.removeEventListener('abort', onAbort);
       agent.destroy();
     }
   }
   throw new Error('Redirect limit exceeded');
 }
 
-async function fetchDynamic(inputUrl) {
+async function fetchDynamic(inputUrl, signal) {
   const startUrl = await validateTarget(inputUrl);
   // Pin the validated hostname to the already-checked address to reduce DNS-rebinding risk.
   // Dynamic mode intentionally stays same-origin; cross-origin subresources are blocked.
@@ -129,9 +141,14 @@ async function fetchDynamic(inputUrl) {
     ? `--host-resolver-rules=MAP ${hostname} ${net.isIP(pinnedAddress) === 6 ? '[' + pinnedAddress + ']' : pinnedAddress},EXCLUDE localhost`
     : null;
   const browser = await chromium.launch({ headless: true, args: resolverRule ? [resolverRule] : [] });
+  let page;
+  let abortPage;
   try {
+    if (signal?.aborted) throw new Error('Scrape cancelled');
     const context = await browser.newContext({ serviceWorkers: 'block', acceptDownloads: false });
-    const page = await context.newPage();
+    page = await context.newPage();
+    abortPage = () => { page.close().catch(() => {}); };
+    signal?.addEventListener('abort', abortPage, { once: true });
     page.setDefaultNavigationTimeout(config.requestTimeoutMs);
     page.setDefaultTimeout(config.requestTimeoutMs);
     let totalBytes = 0;
@@ -155,18 +172,21 @@ async function fetchDynamic(inputUrl) {
       if (totalBytes > config.maxResponseBytes) page.close().catch(() => {});
     });
     await page.goto(startUrl.href, { waitUntil: 'domcontentloaded' });
+    if (signal?.aborted) throw new Error('Scrape cancelled');
     if (totalBytes > config.maxResponseBytes) throw new Error('Page exceeded configured response size limit');
     const html = await page.content();
     if (Buffer.byteLength(html) > config.maxResponseBytes) throw new Error('Rendered HTML exceeded configured size limit');
     return extractData(html, page.url());
   } finally {
+    if (abortPage) signal?.removeEventListener('abort', abortPage);
     await browser.close();
   }
 }
 
-async function scrape(inputUrl, mode = 'static') {
-  if (mode === 'static') return fetchStatic(inputUrl);
-  if (mode === 'dynamic') return fetchDynamic(inputUrl);
+async function scrape(inputUrl, mode = 'static', options = {}) {
+  const { signal } = options;
+  if (mode === 'static') return fetchStatic(inputUrl, signal);
+  if (mode === 'dynamic') return fetchDynamic(inputUrl, signal);
   throw new Error('mode must be "static" or "dynamic"');
 }
 
