@@ -10,4 +10,4 @@ Root `index.html` is the HTML5 shell. UI assets are split by responsibility:
 - `js/ambient-canvas.js`: Canvas ambience and Paint Worklet loader.
 - `worklets/hanzet-grid.js`: CSS Houdini Paint Worklet.
 
-From the repository root, run `npm install` then `npm start`. Express serves the workbench at `http://127.0.0.1:3131/`. Use `npm run build:ui:css` to compile Tailwind or `npm run watch:ui:css` while editing. Canvas/Houdini are optional enhancements and respect reduced-motion settings. The API defaults to the current page origin.
+From the repository root, run `npm install` then `npm start`. Express serves the workbench at `http://127.0.0.1:3131/`. The committed fallback keeps the interface working without a frontend build; use `npm run build:ui:css` to compile full Tailwind CSS or `npm run watch:ui:css` while editing. Canvas/Houdini are optional enhancements and respect reduced-motion settings. The API defaults to the current page origin.

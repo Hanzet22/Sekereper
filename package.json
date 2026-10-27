@@ -8,7 +8,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "start": "npm run build:ui:css && node server.js",
+    "start": "node server.js",
     "dev": "npm run build:ui:css && node --watch server.js",
     "test": "node --test",
     "build:ui:css": "npx @tailwindcss/cli -i ./ui/css/tailwind.input.css -o ./ui/css/tailwind.css --minify",
