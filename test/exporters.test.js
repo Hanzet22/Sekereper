@@ -37,11 +37,13 @@ test('CSV neutralizes spreadsheet formula injection while preserving ordinary va
     { value: 'ordinary text' },
     { value: 'quoted "text"' },
   ]);
-  assert.match(csv, /"'=1\\+1"/);
-  assert.match(csv, /"'\\+SUM\\(A1:A2\\)"/);
-  assert.match(csv, /"'  =HYPERLINK\\(""https:\/\/example\\.com""\\)"/);
-  assert.match(csv, /"'@cmd"/);
-  assert.match(csv, /"'\\t=1\\+1"/);
-  assert.match(csv, /"ordinary text"/);
-  assert.match(csv, /"quoted ""text"""/);
+  assert.deepEqual(csv.split('\r\n').slice(1), [
+    "\"'=1+1\"",
+    "\"'+SUM(A1:A2)\"",
+    "\"'  =HYPERLINK(\"\"https://example.com\"")\"",
+    "\"'@cmd\"",
+    "\"'\t=1+1\"",
+    "\"ordinary text\"",
+    "\"quoted \"\"text\"\"\"",
+  ]);
 });
