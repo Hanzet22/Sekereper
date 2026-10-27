@@ -59,8 +59,7 @@
     const p = job.progress || {};
     const visited = Number(p.visited) || 0;
     const maxPages = Number(p.maxPages) || 1;
-    const finished = ['completed','cancelled','failed'].includes(job.status);
-    const pct = finished ? 100 : Math.min(100, Math.round(visited / maxPages * 100));
+    const pct = Math.min(100, Math.round(visited / maxPages * 100));
     $('progressStatus').textContent = String(job.status || 'unknown').toUpperCase() + ' · ' + job.id.slice(0, 8);
     $('progressCounts').textContent = visited + ' / ' + maxPages + ' visited';
     $('progressBar').value = pct;
