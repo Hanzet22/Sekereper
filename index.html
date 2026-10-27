@@ -4,71 +4,96 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#080c16">
+<meta name="description" content="HANZET-SCRAPER — a local-first HTTP(S) scraping and crawl workbench.">
 <title>HANZET-SCRAPER v3.5.0</title>
 <style>
-:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#edf2f7;background:#0b1020;font-synthesis:none}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#172746 0,#0b1020 58%);padding:24px}
-main{max-width:1080px;margin:0 auto}.hero{padding:26px 0 18px}.eyebrow{color:#7dd3fc;text-transform:uppercase;letter-spacing:.18em;font-size:.76rem;font-weight:800}
-h1{font-size:clamp(2rem,6vw,3.8rem);letter-spacing:-.055em;margin:.35rem 0}.hero p{color:#aebbd0;max-width:700px;line-height:1.6}
-.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}.card{background:#121a2c;border:1px solid #2b3850;border-radius:18px;padding:20px;box-shadow:0 16px 40px #0002}
-label{display:block;color:#cbd5e1;font-size:.88rem;font-weight:700;margin:14px 0 7px}input,textarea,select{width:100%;border:1px solid #3a4964;background:#0a1120;color:#f8fafc;border-radius:10px;padding:12px;font:inherit}textarea{resize:vertical;min-height:130px}input:focus,textarea:focus,select:focus{outline:2px solid #38bdf8;outline-offset:1px}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}button{border:0;border-radius:10px;padding:11px 16px;font:inherit;font-weight:800;cursor:pointer;background:#38bdf8;color:#071321}button.secondary{background:#26364f;color:#e2e8f0}button:disabled{opacity:.5;cursor:wait}
-.notice{border:1px solid #3d536f;background:#101f33;padding:12px 14px;border-radius:12px;color:#c6d6eb;font-size:.88rem;line-height:1.5;margin:12px 0}
-.pill{display:inline-block;border-radius:999px;background:#20324a;color:#a5e3ff;padding:5px 10px;font-size:.76rem;font-weight:800}.status{font-size:.9rem;color:#9fb0c7;min-height:1.4em;margin-top:12px}
-pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:620px;overflow:auto;background:#070c16;border:1px solid #26344b;border-radius:12px;padding:15px;color:#dbeafe;font-size:.83rem;line-height:1.5}
-.small{font-size:.82rem;color:#93a4bc;line-height:1.55}.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px}
-@media(max-width:760px){body{padding:14px}.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}.card{padding:16px}}
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#eef3ff;background:#080c16;font-synthesis:none;--bg:#080c16;--panel:rgba(17,25,43,.88);--line:#293650;--muted:#9baac4;--text:#eef3ff;--cyan:#70e1f5;--blue:#7c9cff;--violet:#b69cff;--good:#8de6bd;--danger:#ff9eaa;--radius:20px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 18% 0%,#172b4b 0,transparent 42%),radial-gradient(ellipse at 90% 12%,#231b42 0,transparent 35%),var(--bg);color:var(--text);padding:0 22px 40px;overflow-x:hidden}
+#ambient{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;opacity:.42;z-index:-1}
+.shell{max-width:1220px;margin:0 auto}.topbar{height:72px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid #263149}.brand{display:flex;align-items:center;gap:11px;font-size:.88rem;font-weight:900;letter-spacing:.1em}.brand-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#70e1f5,#8a9eff 65%,#c6a4ff);color:#09111f;box-shadow:0 0 28px #70e1f533}.top-meta{display:flex;align-items:center;gap:9px}.pill,.status-pill{display:inline-flex;align-items:center;gap:7px;border:1px solid #34435f;background:#121d31;color:#bfefff;border-radius:999px;padding:6px 10px;font-size:.73rem;font-weight:800;white-space:nowrap}.dot{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 10px #8de6bd88}
+.hero{padding:44px 0 28px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(230px,.6fr);align-items:end;gap:28px}.eyebrow{display:flex;align-items:center;gap:8px;color:var(--cyan);text-transform:uppercase;letter-spacing:.19em;font-size:.72rem;font-weight:900}.eyebrow svg{width:16px;height:16px}h1{font-size:clamp(2.25rem,6vw,4.7rem);line-height:.99;letter-spacing:-.07em;margin:16px 0 15px;font-weight:900}h1 span{background:linear-gradient(100deg,#fff 10%,#a4eaff 55%,#c8b1ff);background-clip:text;-webkit-background-clip:text;color:transparent}.hero p{max-width:690px;color:#afbdd3;line-height:1.75;margin:0;font-size:.98rem}.hero-side{border:1px solid #31415d;border-radius:18px;padding:18px;background:linear-gradient(145deg,#182640c9,#11172abf);box-shadow:0 20px 55px #0002}.side-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:800}.side-value{font-size:1.55rem;font-weight:900;letter-spacing:-.04em;margin:8px 0}.side-note{color:var(--muted);font-size:.8rem;line-height:1.5}
+.notice{display:flex;gap:12px;align-items:flex-start;border:1px solid #3a4a69;background:#111c30d9;padding:14px 16px;border-radius:15px;color:#c5d5ee;font-size:.84rem;line-height:1.6;margin:0 0 22px}.notice svg{width:20px;height:20px;flex:none;color:var(--cyan);margin-top:1px}.notice strong{color:#f0f6ff}
+.workspace{display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);gap:18px;align-items:start}.stack{display:grid;gap:18px}.card{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:0 18px 55px #0002;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:17px}.card-title{display:flex;align-items:center;gap:11px}.iconbox{width:39px;height:39px;border:1px solid #344766;background:#1a2941;border-radius:13px;display:grid;place-items:center;color:var(--cyan);flex:none}.iconbox svg{width:19px;height:19px}h2{font-size:1.05rem;margin:0;letter-spacing:-.025em}h3{font-size:.95rem;margin:0;letter-spacing:-.015em}.subhead{color:var(--muted);font-size:.78rem;margin:5px 0 0;line-height:1.5}.section-rule{border:0;border-top:1px solid #293650;margin:23px 0}
+label{display:block;color:#cbd6e8;font-size:.8rem;font-weight:750;margin:15px 0 7px}input,textarea,select{width:100%;min-width:0;border:1px solid #34435e;background:#0a1120;color:#f5f8ff;border-radius:11px;padding:12px 13px;font:inherit;font-size:.87rem;transition:border-color .18s,box-shadow .18s}textarea{resize:vertical;min-height:104px;line-height:1.55}input::placeholder,textarea::placeholder{color:#687b99}input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-color:var(--cyan)}input[type=checkbox]{width:17px;height:17px;accent-color:#70e1f5;vertical-align:middle;margin:0 8px 0 0}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.hint{color:#8798b3;font-size:.75rem;line-height:1.55;margin:8px 0 0}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}button{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:11px;padding:11px 14px;font:inherit;font-size:.81rem;font-weight:850;cursor:pointer;background:linear-gradient(115deg,#70e1f5,#9baeff);color:#07111e;transition:transform .15s,filter .15s,border-color .15s;min-height:42px}button svg{width:16px;height:16px}button:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}button:active:not(:disabled){transform:translateY(0)}button.secondary{background:#1b2940;color:#e2ebfb;border-color:#354560}button.ghost{background:transparent;color:#aebdd5;border-color:#35435b}button.danger{background:#3a202e;color:#ffc2ca;border-color:#613344}button:disabled{opacity:.48;cursor:wait;transform:none}
+.checkline{display:flex;align-items:center;gap:8px;margin-top:15px;color:#cbd6e8;font-size:.8rem}.checkline label{display:flex;align-items:center;margin:0;font-weight:650}.status{font-size:.8rem;color:#a8bad4;min-height:1.35em;margin-top:12px;overflow-wrap:anywhere}.status[data-kind=error]{color:var(--danger)}.status[data-kind=success]{color:var(--good)}
+.output-card{position:sticky;top:14px}.output-tools{display:flex;flex-wrap:wrap;gap:8px}.output-tools button{padding:9px 11px;min-height:36px;font-size:.75rem}.output-window{position:relative;margin-top:15px;min-height:360px;background:#070b13;border:1px solid #26334a;border-radius:15px;overflow:hidden}.output-window:before{content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,var(--cyan),var(--blue),var(--violet));opacity:.8}pre{margin:0;padding:18px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:580px;min-height:358px;overflow:auto;color:#dbe9ff;font: .79rem/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2}.output-empty{color:#6f819d}.output-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;color:#8192ac;font-size:.74rem}.output-foot span{display:inline-flex;align-items:center;gap:6px}.kbd{border:1px solid #35435b;border-radius:5px;padding:2px 5px;font:inherit;color:#aebed5}
+.footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:25px 2px 0;color:#7586a2;font-size:.74rem;line-height:1.6}.footer a{color:#a9caff;text-decoration:none}.footer a:hover{text-decoration:underline}
+@supports (background: paint(hanzet-grid)){body{background-image:paint(hanzet-grid),radial-gradient(ellipse at 18% 0%,#172b4b 0,transparent 42%),radial-gradient(ellipse at 90% 12%,#231b42 0,transparent 35%)}}
+@media(max-width:900px){.hero{grid-template-columns:1fr}.hero-side{display:none}.workspace{grid-template-columns:1fr}.output-card{position:static}.output-window,pre{min-height:280px}}
+@media(max-width:560px){body{padding:0 13px 28px}.topbar{height:62px}.brand{font-size:.74rem;letter-spacing:.06em}.brand-mark{width:32px;height:32px}.top-meta .pill{display:none}.hero{padding:34px 0 23px}h1{font-size:clamp(2.15rem,12vw,3.25rem)}.card{padding:17px;border-radius:17px}.row{grid-template-columns:1fr}.actions button{flex:1 1 auto}.output-tools button{flex:1 1 auto}.notice{font-size:.79rem}.footer{padding-top:20px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}#ambient{display:none}}
 </style>
 </head>
 <body>
-<main>
-<header class="hero">
-<div class="eyebrow">Modular scraping workbench</div>
-<h1>HANZET-SCRAPER <span class="pill">v3.5.0</span></h1>
-<p>Static and browser-rendered scraping plus bounded crawl jobs, progress controls, data exports, and feed/discovery parsers.</p>
+<canvas id="ambient" aria-hidden="true"></canvas>
+<main class="shell">
+<header class="topbar">
+<div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 17 12 4l8 13M7 12h10M9 17h6"/></svg></span><span>HANZET / LAB</span></div>
+<div class="top-meta"><span class="pill">SCRAPER WORKBENCH</span><span class="status-pill"><i class="dot"></i> LOCAL API</span></div>
 </header>
-<div class="notice"><strong>Responsible use:</strong> Only scrape public websites you are allowed to access. Private/internal IPs and non-HTTP(S) targets are blocked by the backend. Do not submit secrets or personal data.</div>
-<div class="grid">
-<section class="card">
-<h2>Run scraper</h2>
-<label for="api">API base URL</label><input id="api" value="http://127.0.0.1:3131" autocomplete="url">
-<label for="mode">Scrape mode</label><select id="mode"><option value="static">Static HTML (faster)</option><option value="dynamic">Dynamic browser render</option></select>
-<label for="urls">Target URL(s)</label><textarea id="urls" spellcheck="false" placeholder="https://example.com&#10;https://www.iana.org/domains/reserved"></textarea>
-<p class="small">Enter one URL for a single scrape, or one URL per line for batch mode. Batch size is limited by the server configuration.</p>
-<div class="actions"><button id="single">Scrape first URL</button><button class="secondary" id="batch">Run batch</button><button class="secondary" id="health">Check API</button></div>
-<div id="status" class="status" role="status" aria-live="polite"></div>
-<hr style="border-color:#2b3850;margin:22px 0">
-<h3>Crawl Orchestrator</h3>
-<div class="row"><div><label for="maxPages">Max pages (1–100)</label><input id="maxPages" type="number" min="1" max="100" value="25"></div><div><label for="maxDepth">Max depth (0–5)</label><input id="maxDepth" type="number" min="0" max="5" value="2"></div></div>
-<label for="delay">Per-domain delay (ms, 0–5000)</label><input id="delay" type="number" min="0" max="5000" value="500">
-<label><input id="sameOrigin" type="checkbox" checked style="width:auto;margin-right:8px">Stay on seed origin (recommended)</label>
-<div class="actions"><button id="crawl">Start crawl job</button><button class="secondary" id="jobs">List jobs</button></div>
-<label for="jobId">Crawl job ID</label><input id="jobId" placeholder="Paste the job ID returned by the API">
-<div class="actions"><button class="secondary" id="pauseJob">Pause</button><button class="secondary" id="resumeJob">Resume</button><button class="secondary" id="cancelJob">Cancel</button><button class="secondary" id="jobResults">Get results</button></div>
-<div class="actions"><button class="secondary" id="exportCSV">Export CSV</button><button class="secondary" id="exportNDJSON">Export NDJSON</button></div>
+<section class="hero">
+<div><div class="eyebrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16Z"/></svg> Modular scraping workbench</div>
+<h1><span>HANZET-</span><br><span>SCRAPER</span></h1>
+<p>Inspect public web content, run controlled batch requests, orchestrate bounded crawls, and export structured results — from one clean interface.</p></div>
+<aside class="hero-side"><div class="side-label">Current release</div><div class="side-value">v3.5.0 <span class="pill">STABLE UI</span></div><div class="side-note">Static + browser-rendered scraping · crawl lifecycle controls · JSON, CSV and NDJSON exports.</div></aside>
 </section>
+<div class="notice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 21 7v5c0 5-3.7 8-9 9-5.3-1-9-4-9-9V7l9-4Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg><div><strong>Responsible use &amp; network safety.</strong> Only request public websites you are allowed to access. The backend blocks private/internal targets; respect site terms, rate limits, robots directives, privacy, copyright and applicable law. The interface does not bypass access controls.</div></div>
+<div class="workspace">
+<div class="stack">
 <section class="card">
-<div class="section-title"><h2>Output</h2><span id="result-tag" class="pill">Ready</span></div>
-<div class="actions"><button class="secondary" id="copy">Copy JSON</button><button class="secondary" id="download">Download JSON</button><button class="secondary" id="clear">Clear</button></div>
-<pre id="output" aria-label="Scrape output">Results will appear here.</pre>
-<p class="small">Output is generated by your configured local API. The UI does not store results on a server.</p>
+<div class="card-head"><div class="card-title"><span class="iconbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4M8 11h6M11 8v6"/></svg></span><div><h2>Scrape request</h2><p class="subhead">Single URL or a newline-separated batch.</p></div></div><span class="pill">01 / FETCH</span></div>
+<label for="api">API base URL</label><input id="api" value="http://127.0.0.1:3131" autocomplete="url" spellcheck="false">
+<label for="mode">Rendering mode</label><select id="mode"><option value="static">Static HTML — fast request</option><option value="dynamic">Dynamic — browser-rendered page</option></select>
+<label for="urls">Target URL(s)</label><textarea id="urls" spellcheck="false" placeholder="https://example.com&#10;https://www.iana.org/domains/reserved"></textarea>
+<p class="hint">One URL for a single scrape, or one URL per line for batch mode. Batch size is controlled by server configuration.</p>
+<div class="actions"><button id="single"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 5 11 7-11 7V5Z"/></svg>Scrape first URL</button><button class="secondary" id="batch">Run batch</button><button class="ghost" id="health">Check API</button></div>
+<div id="status" class="status" role="status" aria-live="polite"></div>
+<hr class="section-rule">
+<div class="card-head"><div class="card-title"><span class="iconbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 4v4m8 4h-4M12 20v-4M4 12h4M9 9l6 6m0-6-6 6"/></svg></span><div><h3>Crawl orchestrator</h3><p class="subhead">Bounded crawl jobs with lifecycle controls.</p></div></div><span class="pill">02 / CRAWL</span></div>
+<div class="row"><div><label for="maxPages">Maximum pages (1–100)</label><input id="maxPages" type="number" min="1" max="100" value="25"></div><div><label for="maxDepth">Maximum depth (0–5)</label><input id="maxDepth" type="number" min="0" max="5" value="2"></div></div>
+<label for="delay">Per-domain delay (ms, 0–5000)</label><input id="delay" type="number" min="0" max="5000" value="500">
+<div class="checkline"><label><input id="sameOrigin" type="checkbox" checked>Stay on seed origin (recommended)</label></div>
+<div class="actions"><button id="crawl">Start crawl job</button><button class="secondary" id="jobs">List jobs</button></div>
+<label for="jobId">Crawl job ID</label><input id="jobId" placeholder="Job ID returned by the API" autocomplete="off" spellcheck="false">
+<div class="actions"><button class="secondary" id="pauseJob">Pause</button><button class="secondary" id="resumeJob">Resume</button><button class="danger" id="cancelJob">Cancel</button></div>
+<div class="actions"><button class="secondary" id="jobResults">Get results (JSON)</button><button class="ghost" id="exportCSV">Export CSV</button><button class="ghost" id="exportNDJSON">Export NDJSON</button></div>
 </section>
 </div>
-<p class="small">HANZET-SCRAPER is a research utility. Respect website terms, rate limits, robots directives, copyright, and applicable law.</p>
+<div class="stack">
+<section class="card output-card">
+<div class="card-head"><div class="card-title"><span class="iconbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 5H5v14h14v-3M9 3h12v12H9z"/><path d="m12 8 2.5 2.5L12 13m3-2.5h3"/></svg></span><div><h2>Response console</h2><p class="subhead">Readable output, ready to copy or download.</p></div></div><span id="result-tag" class="pill">READY</span></div>
+<div class="output-tools"><button class="secondary" id="copy">Copy output</button><button class="secondary" id="download">Download JSON</button><button class="ghost" id="clear">Clear console</button></div>
+<div class="output-window"><pre id="output" aria-label="Scrape output"><span class="output-empty">Waiting for a request…</span>
+
+Run a scrape, batch, or crawl job. Results will appear here.</pre></div>
+<div class="output-foot"><span><i class="dot"></i> Browser-side output only</span><span>Use <kbd class="kbd">Copy output</kbd> to share results</span></div>
+<p class="hint">Results are displayed in this browser session. This UI does not persist scraped data to a separate storage service.</p>
+</section>
+<section class="card">
+<div class="card-head"><div class="card-title"><span class="iconbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="8"/></svg></span><div><h3>Interface capabilities</h3><p class="subhead">Progressive visual enhancements, no UI framework.</p></div></div></div>
+<p class="hint">Built with semantic HTML, responsive CSS, inline SVG icons, Canvas ambience, and optional CSS Houdini Paint Worklet. Houdini and animation effects are decorative enhancements only; core controls work without them.</p>
+</section>
+</div>
+</div>
+<footer class="footer"><span>HANZET-SCRAPER · Research utility · v3.5.0</span><span><a href="https://github.com/Hanzet22/Sekereper" rel="noreferrer">Source on GitHub</a> · Respect robots directives and site policies.</span></footer>
 </main>
 <script>
 (() => {
+  'use strict';
   const $ = id => document.getElementById(id);
   let lastOutput = '';
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function urls() { return $('urls').value.split(/\r?\n/).map(v => v.trim()).filter(Boolean); }
   function apiUrl(path) { return $('api').value.trim().replace(/\/+$/, '') + path; }
-  function show(data, status, tag = 'Complete') {
+  function show(data, status, tag = 'Complete', kind = '') {
     const discoveredJobId = data?.job?.id || data?.jobId;
     if (discoveredJobId) $('jobId').value = discoveredJobId;
-    lastOutput = JSON.stringify(data, null, 2);
+    lastOutput = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
     $('output').textContent = lastOutput;
     $('status').textContent = status;
-    $('result-tag').textContent = tag;
+    $('status').dataset.kind = kind;
+    $('result-tag').textContent = tag.toUpperCase();
   }
   async function request(path, body) {
     const options = body ? {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)} : {};
@@ -79,45 +104,71 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:620px;overflow:auto;b
   }
   async function run(buttonId, path, bodyFactory, label) {
     const button = $(buttonId);
-    button.disabled = true; $('status').textContent = label + '…';
-    try { show(await request(path, bodyFactory()), label + ' completed.', 'Complete'); }
-    catch (error) { show({success:false,error:error.message}, 'Request failed: ' + error.message, 'Error'); }
+    button.disabled = true; $('status').textContent = label + '…'; $('status').dataset.kind = '';
+    try { show(await request(path, bodyFactory ? bodyFactory() : undefined), label + ' completed.', 'Complete', 'success'); }
+    catch (error) { show({success:false,error:error.message}, 'Request failed: ' + error.message, 'Error', 'error'); }
     finally { button.disabled = false; }
   }
   $('single').addEventListener('click', () => {
-    const list = urls(); if (!list.length) return show({error:'Enter a URL first.'}, 'Enter a URL first.', 'Input needed');
+    const list = urls(); if (!list.length) return show({error:'Enter a URL first.'}, 'Enter a URL first.', 'Input needed', 'error');
     run('single','/scrape',() => ({url:list[0],mode:$('mode').value}),'Scraping');
   });
   $('batch').addEventListener('click', () => {
-    const list = urls(); if (!list.length) return show({error:'Enter at least one URL.'}, 'Enter at least one URL.', 'Input needed');
+    const list = urls(); if (!list.length) return show({error:'Enter at least one URL.'}, 'Enter at least one URL.', 'Input needed', 'error');
     run('batch','/scrape/batch',() => ({urls:list,mode:$('mode').value}),'Running batch');
   });
   $('health').addEventListener('click', () => run('health','/health',null,'Checking API'));
   $('crawl').addEventListener('click', () => {
-    const list = urls(); if (!list.length) return show({error:'Enter at least one seed URL.'}, 'Enter at least one seed URL.', 'Input needed');
+    const list = urls(); if (!list.length) return show({error:'Enter at least one seed URL.'}, 'Enter at least one seed URL.', 'Input needed', 'error');
     const payload = {urls:list,mode:$('mode').value,maxPages:Number($('maxPages').value),maxDepth:Number($('maxDepth').value),domainDelayMs:Number($('delay').value),sameOrigin:$('sameOrigin').checked};
     run('crawl','/crawl/jobs',() => payload,'Creating crawl job');
   });
   $('jobs').addEventListener('click', () => run('jobs','/crawl/jobs',null,'Loading crawl jobs'));
-  function jobAction(action) { const id = $('jobId').value.trim(); if (!id) return show({error:'Enter a crawl job ID.'}, 'Enter a crawl job ID.', 'Input needed'); run(action + 'Job','/crawl/jobs/' + encodeURIComponent(id) + '/' + action,() => ({}),action + ' job'); }
+  function jobAction(action) { const id = $('jobId').value.trim(); if (!id) return show({error:'Enter a crawl job ID.'}, 'Enter a crawl job ID.', 'Input needed', 'error'); run(action + 'Job','/crawl/jobs/' + encodeURIComponent(id) + '/' + action,() => ({}),action + ' job'); }
   $('pauseJob').addEventListener('click', () => jobAction('pause'));
   $('resumeJob').addEventListener('click', () => jobAction('resume'));
   $('cancelJob').addEventListener('click', () => jobAction('cancel'));
-  async function showJobResults(format) { const id = $('jobId').value.trim(); if (!id) return show({error:'Enter a crawl job ID.'}, 'Enter a crawl job ID.', 'Input needed'); try { const response = await fetch(apiUrl('/crawl/jobs/' + encodeURIComponent(id) + '/results' + (format ? '?format=' + format : ''))); if (!response.ok) throw new Error('HTTP ' + response.status); if (format && format !== 'json') { const text = await response.text(); lastOutput = text; $('output').textContent = text; $('status').textContent = 'Export ready.'; $('result-tag').textContent = format.toUpperCase(); } else show(await response.json(),'Crawl results loaded.','Results'); } catch(error) { show({error:error.message},'Could not load results.','Error'); } }
+  async function showJobResults(format) {
+    const id = $('jobId').value.trim();
+    if (!id) return show({error:'Enter a crawl job ID.'}, 'Enter a crawl job ID.', 'Input needed', 'error');
+    try {
+      $('status').textContent = 'Loading crawl results…';
+      const response = await fetch(apiUrl('/crawl/jobs/' + encodeURIComponent(id) + '/results' + (format ? '?format=' + format : '')));
+      if (!response.ok) { const err = await response.json().catch(() => ({})); throw new Error(err.error || 'HTTP ' + response.status); }
+      if (format && format !== 'json') { const text = await response.text(); show(text, 'Export ready.', format.toUpperCase(), 'success'); }
+      else show(await response.json(),'Crawl results loaded.','Results','success');
+    } catch(error) { show({error:error.message},'Could not load results: ' + error.message,'Error','error'); }
+  }
   $('jobResults').addEventListener('click', () => showJobResults('json'));
   $('exportCSV').addEventListener('click', () => showJobResults('csv'));
   $('exportNDJSON').addEventListener('click', () => showJobResults('ndjson'));
   $('copy').addEventListener('click', async () => {
     if (!lastOutput) return;
-    try { await navigator.clipboard.writeText(lastOutput); $('status').textContent = 'JSON copied.'; }
-    catch { $('status').textContent = 'Clipboard unavailable in this browser context.'; }
+    try { await navigator.clipboard.writeText(lastOutput); $('status').textContent = 'Output copied to clipboard.'; $('status').dataset.kind = 'success'; }
+    catch { $('status').textContent = 'Clipboard unavailable in this browser context.'; $('status').dataset.kind = 'error'; }
   });
   $('download').addEventListener('click', () => {
     if (!lastOutput) return;
     const blob = new Blob([lastOutput], {type:'application/json'});
-    const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'hanzet-scraper-result.json'; link.click(); URL.revokeObjectURL(link.href);
+    const url = URL.createObjectURL(blob); const link = document.createElement('a');
+    link.href = url; link.download = 'hanzet-scraper-result.json'; document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
-  $('clear').addEventListener('click', () => { lastOutput=''; $('output').textContent='Results will appear here.'; $('status').textContent=''; $('result-tag').textContent='Ready'; });
+  $('clear').addEventListener('click', () => { lastOutput=''; $('output').textContent='Console cleared. Run a request to display results.'; $('status').textContent=''; $('status').dataset.kind=''; $('result-tag').textContent='READY'; });
+
+  // Canvas ambience is decorative and respects reduced-motion preferences.
+  const canvas = $('ambient'), ctx = canvas.getContext && canvas.getContext('2d');
+  if (ctx && !reduceMotion) {
+    let width=0,height=0,points=[];
+    function resize() { const dpr=Math.min(window.devicePixelRatio||1,1.5); width=window.innerWidth;height=window.innerHeight;canvas.width=Math.floor(width*dpr);canvas.height=Math.floor(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);const count=Math.min(55,Math.floor(width/24));points=Array.from({length:count},()=>({x:Math.random()*width,y:Math.random()*height,r:Math.random()*1.4+.3,v:Math.random()*.16+.025,a:Math.random()*.35+.08})); }
+    function draw(){ctx.clearRect(0,0,width,height);for(const p of points){p.y-=p.v;if(p.y< -4){p.y=height+4;p.x=Math.random()*width;}ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(145,196,255,'+p.a+')';ctx.fill();}requestAnimationFrame(draw);}
+    resize();window.addEventListener('resize',resize,{passive:true});draw();
+  }
+  // CSS Houdini is optional: the page keeps its gradient fallback if unavailable.
+  if ('paintWorklet' in CSS && !reduceMotion) {
+    const paintCode = "registerPaint('hanzet-grid', class { paint(ctx, size) { const gap=34; ctx.strokeStyle='rgba(124,156,255,.055)'; ctx.lineWidth=1; for(let x=0;x<size.width;x+=gap){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,size.height);ctx.stroke()} for(let y=0;y<size.height;y+=gap){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(size.width,y);ctx.stroke()} } });";
+    try { const blob=new Blob([paintCode],{type:'text/javascript'});const url=URL.createObjectURL(blob);CSS.paintWorklet.addModule(url).catch(()=>{}).finally(()=>URL.revokeObjectURL(url)); } catch (_) { /* Visual enhancement only. */ }
+  }
 })();
 </script>
 </body>
