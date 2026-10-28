@@ -9,6 +9,7 @@
   function startApp() {
     notice.remove();
     app.removeAttribute('inert');
+    window.dispatchEvent(new CustomEvent('hanzet:legal-acknowledged'));
     const script = document.createElement('script');
     script.src = 'ui/js/app.js';
     script.defer = true;
