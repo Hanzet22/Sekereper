@@ -59,11 +59,13 @@ If you modify this program and make it available for users to interact with over
 
 ## Requirements and setup
 
-Requirements: Node.js 20+, npm, and Playwright-supported Chromium dependencies.
+Requirements: Node.js 20+, npm, and a compatible Chromium browser for dynamic mode. On glibc-compatible Linux, install it with `npx playwright install chromium`. On Alpine/musl (including Alpine in PRoot), install the native browser with `apk add chromium` and set `PLAYWRIGHT_EXECUTABLE_PATH=/usr/bin/chromium`.
 
     npm install
-    npx playwright install chromium
+    npx playwright install chromium   # glibc-compatible Linux
     cp .env.example .env
+
+For Alpine/musl, install native Chromium (`apk add chromium`) and uncomment `PLAYWRIGHT_EXECUTABLE_PATH=/usr/bin/chromium` in `.env`.
     npm start
 
 API default: http://127.0.0.1:3131.
@@ -88,6 +90,7 @@ Open http://localhost:3000. Configure CORS_ORIGINS if using a different browser 
 | MAX_BATCH_SIZE | 5 | Batch seed URLs (hard cap 10) |
 | MAX_CONCURRENT_JOBS | 3 | Concurrent workers in a batch |
 | MAX_REDIRECTS | 3 | Maximum static redirects |
+| PLAYWRIGHT_EXECUTABLE_PATH | unset | Optional Chromium executable path, e.g. `/usr/bin/chromium` on Alpine |
 
 ## API reference
 
