@@ -7,7 +7,7 @@ const { config } = require('./config');
 const { rateLimit } = require('./middleware/rate-limit');
 const { scrape } = require('./services/scraper');
 const { sendError, renderChallengePage } = require('./security/error-pages');
-const { configured: challengeConfigured, proxyChallenge, verifyChallenge } = require('./security/proxy-challenge');
+const { configured: challengeConfigured, proxyChallenge, verifyChallenge, revokeChallengeConsent } = require('./security/proxy-challenge');
 
 function resultQuality(data) {
   const page = data?.page;
@@ -70,6 +70,7 @@ function createApp() {
     return res.type('html').send(renderChallengePage(process.env.TURNSTILE_SITE_KEY));
   });
   app.post('/challenge/verify', verifyChallenge);
+  app.post('/challenge/consent/revoke', revokeChallengeConsent);
 
   app.get('/health', (_req, res) => res.json({
     status: 'ok', version: '3.7.0',
