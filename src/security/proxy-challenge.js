@@ -63,7 +63,7 @@ async function lookupRisk(ip) {
   return risky;
 }
 async function proxyChallenge(req, res, next) {
-  if (!configured() || req.path === '/challenge' || req.path === '/challenge/verify' || req.path === '/health' || req.path.startsWith('/ui/')) return next();
+  if (!configured() || req.path === '/challenge' || req.path === '/challenge/verify' || req.path === '/challenge/consent/revoke' || req.path === '/health' || req.path.startsWith('/ui/')) return next();
   const ip = requestIp(req);
   if (!ip) return next();
   if (validChallengeCookie(readCookie(req), ip)) return next();
@@ -77,6 +77,10 @@ async function proxyChallenge(req, res, next) {
     console.warn('[security] IP reputation lookup unavailable:', error.message);
     return next();
   }
+}
+function revokeChallengeConsent(_req, res) {
+  res.setHeader('Set-Cookie', COOKIE + '=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax');
+  return res.status(204).end();
 }
 async function verifyChallenge(req, res) {
   if (!configured()) return res.status(503).json({ success: false, error: 'Challenge protection is not configured. Set IPQS_API_KEY, TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY and CHALLENGE_SIGNING_SECRET (32+ characters).' });
@@ -99,4 +103,4 @@ async function verifyChallenge(req, res) {
     return res.status(503).json({ success: false, error: 'Challenge verification is temporarily unavailable. Try again shortly.' });
   }
 }
-module.exports = { configured, requestIp, makeChallengeCookie, validChallengeCookie, proxyChallenge, verifyChallenge };
+module.exports = { configured, requestIp, makeChallengeCookie, validChallengeCookie, proxyChallenge, verifyChallenge, revokeChallengeConsent };
