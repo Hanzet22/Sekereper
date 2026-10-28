@@ -140,7 +140,22 @@ async function fetchDynamic(inputUrl, signal) {
   const resolverRule = !net.isIP(hostname) && pinnedAddress
     ? `--host-resolver-rules=MAP ${hostname} ${net.isIP(pinnedAddress) === 6 ? '[' + pinnedAddress + ']' : pinnedAddress},EXCLUDE localhost`
     : null;
-  const browser = await chromium.launch({ headless: true, args: resolverRule ? [resolverRule] : [] });
+  const browserOptions = { headless: true, args: resolverRule ? [resolverRule] : [] };
+  const configuredBrowser = process.env.PLAYWRIGHT_EXECUTABLE_PATH;
+  if (configuredBrowser) browserOptions.executablePath = configuredBrowser;
+
+  let browser;
+  try {
+    browser = await chromium.launch(browserOptions);
+  } catch (error) {
+    if (error.code === 'ENOENT' || /Executable doesn't exist|spawn .* ENOENT/i.test(error.message || '')) {
+      const hint = configuredBrowser
+        ? `The configured browser at "${configuredBrowser}" could not be launched.`
+        : 'On Alpine Linux, install native Chromium with "apk add chromium" and set PLAYWRIGHT_EXECUTABLE_PATH=/usr/bin/chromium. On glibc-compatible Linux, run "npx playwright install chromium".';
+      throw new Error(`Dynamic scraping could not launch Chromium. ${hint} Original error: ${error.message}`);
+    }
+    throw error;
+  }
   let page;
   let abortPage;
   try {
