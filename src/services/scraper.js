@@ -141,7 +141,25 @@ async function fetchDynamic(inputUrl, signal) {
   const resolverRule = !net.isIP(hostname) && pinnedAddress
     ? `--host-resolver-rules=MAP ${hostname} ${net.isIP(pinnedAddress) === 6 ? '[' + pinnedAddress + ']' : pinnedAddress},EXCLUDE localhost`
     : null;
-  const browser = await chromium.launch({ headless: true, args: resolverRule ? [resolverRule] : [] });
+  const browserOptions = { headless: true, args: resolverRule ? [resolverRule] : [] };
+  // Alpine/musl environments should use their distro-provided Chromium rather than
+  // Playwright's glibc browser bundle. Set PLAYWRIGHT_EXECUTABLE_PATH explicitly.
+  if (process.env.PLAYWRIGHT_EXECUTABLE_PATH) {
+    browserOptions.executablePath = process.env.PLAYWRIGHT_EXECUTABLE_PATH;
+  }
+  let browser;
+  try {
+    browser = await chromium.launch(browserOptions);
+  } catch (error) {
+    if (error.code === 'ENOENT' || /Executable doesn't exist|spawn .* ENOENT/i.test(error.message || '')) {
+      const configured = process.env.PLAYWRIGHT_EXECUTABLE_PATH;
+      const hint = configured
+        ? `The configured browser at "${configured}" could not be launched.`
+        : 'On Alpine Linux, install the native browser with "apk add chromium" and set PLAYWRIGHT_EXECUTABLE_PATH=/usr/bin/chromium.';
+      throw new Error(`Dynamic scraping could not launch Chromium. ${hint} In glibc-compatible Linux, run "npx playwright install chromium". Original error: ${error.message}`);
+    }
+    throw error;
+  }
   let page;
   let abortPage;
   try {
