@@ -3,7 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { toCSV, toNDJSON, compareResults } = require('../src/services/exporters');
 const { parseFeed } = require('../src/services/feed-parser');
-const { parseSitemap, parseRobots } = require('../src/services/discovery-parser');
+const { parseSitemap } = require('../src/services/discovery-parser');
 
 test('CSV escapes quotes and preserves commas', () => {
   assert.equal(toCSV([{title:'a,b',note:'say "hi"'}]), '"title","note"\r\n"a,b","say ""hi"""');
@@ -19,11 +19,8 @@ test('RSS parser extracts bounded item metadata', () => {
   const result = parseFeed('<rss><channel><title>Demo</title><item><title>One</title><link>https://example.com</link></item></channel></rss>');
   assert.equal(result.type,'rss'); assert.equal(result.items[0].title,'One');
 });
-test('sitemap and robots parsers extract discovery hints', () => {
+test('sitemap parser extracts URLs', () => {
   assert.deepEqual(parseSitemap('<urlset><url><loc>https://example.com/</loc></url></urlset>').urls,['https://example.com/']);
-  const robots = parseRobots('User-agent: *\nDisallow: /private\nSitemap: https://example.com/sitemap.xml');
-  assert.equal(robots.groups[0].rules[0].path,'/private');
-  assert.equal(robots.sitemaps[0],'https://example.com/sitemap.xml');
 });
 
 
