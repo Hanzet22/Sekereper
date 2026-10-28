@@ -4,7 +4,8 @@ const https = require('node:https');
 const http = require('node:http');
 const net = require('node:net');
 const cheerio = require('cheerio');
-const { chromium } = require('playwright');
+const { chromium: playwrightChromium } = require('playwright-core');
+const serverlessChromium = require('@sparticuz/chromium');
 const { config } = require('../config');
 const { validateTarget, isPublicAddress, resolveHostname } = require('../security/url-policy');
 
@@ -140,21 +141,24 @@ async function fetchDynamic(inputUrl, signal) {
   const resolverRule = !net.isIP(hostname) && pinnedAddress
     ? `--host-resolver-rules=MAP ${hostname} ${net.isIP(pinnedAddress) === 6 ? '[' + pinnedAddress + ']' : pinnedAddress},EXCLUDE localhost`
     : null;
-  const browserOptions = { headless: true, args: resolverRule ? [resolverRule] : [] };
   const configuredBrowser = process.env.PLAYWRIGHT_EXECUTABLE_PATH;
-  if (configuredBrowser) browserOptions.executablePath = configuredBrowser;
-
   let browser;
+
   try {
-    browser = await chromium.launch(browserOptions);
+    // Use the Chromium binary bundled for serverless Linux environments such as Vercel.
+    // Keep the existing validated-host resolver pin and all same-origin request guards.
+    const executablePath = configuredBrowser || await serverlessChromium.executablePath();
+    const args = [...serverlessChromium.args, ...(resolverRule ? [resolverRule] : [])];
+    browser = await playwrightChromium.launch({
+      headless: true,
+      args,
+      executablePath,
+    });
   } catch (error) {
-    if (error.code === 'ENOENT' || /Executable doesn't exist|spawn .* ENOENT/i.test(error.message || '')) {
-      const hint = configuredBrowser
-        ? `The configured browser at "${configuredBrowser}" could not be launched.`
-        : 'On Alpine Linux, install native Chromium with "apk add chromium" and set PLAYWRIGHT_EXECUTABLE_PATH=/usr/bin/chromium. On glibc-compatible Linux, run "npx playwright install chromium".';
-      throw new Error(`Dynamic scraping could not launch Chromium. ${hint} Original error: ${error.message}`);
-    }
-    throw error;
+    const hint = configuredBrowser
+      ? `The configured browser at "${configuredBrowser}" could not be launched.`
+      : 'The bundled serverless Chromium binary could not be extracted or launched. Check the Vercel function runtime and deployment bundle.';
+    throw new Error(`Dynamic scraping could not launch Chromium. ${hint} Original error: ${error.message}`);
   }
   let page;
   let abortPage;
