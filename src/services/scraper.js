@@ -81,12 +81,11 @@ function extractData(html, url) {
 function detectChallenge(html) {
   const $ = cheerio.load(html);
   const title = $('title').text().trim();
-  const bodyText = $('body').text().replace(/\\s+/g, ' ').trim().slice(0, 12000);
-  const normalizedTitle = title.toLowerCase();
+  const bodyText = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 12000);
   const normalizedBody = bodyText.toLowerCase();
   const normalizedHtml = String(html).slice(0, 30000).toLowerCase();
-  const cloudflareMarker = /cf-chl-|__cf_chl|challenge-platform|cdn-cgi\\/challenge-platform/.test(normalizedHtml);
-  const challengeTitle = /^(just a moment\\.?|attention required!?|security check required)$/i.test(title);
+  const cloudflareMarker = /cf-chl-|__cf_chl|challenge-platform|cdn-cgi.*challenge-platform/.test(normalizedHtml);
+  const challengeTitle = /^(just a moment\.?|attention required!?|security check required)$/i.test(title);
   const challengePhrase = /verify you are human|checking your browser|performing security verification|enable javascript and cookies to continue|complete the security check|please wait while we verify/.test(normalizedBody);
   if (cloudflareMarker || (challengeTitle && challengePhrase)) return 'cloudflare_challenge';
   if (challengePhrase || /access denied by security policy|automated requests are not allowed/.test(normalizedBody)) return 'anti_bot_challenge';
