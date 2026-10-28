@@ -6,15 +6,58 @@
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#080c16">
 <meta name="description" content="HANZET-SCRAPER — a local-first HTTP(S) scraping and crawl workbench.">
-<title>HANZET-SCRAPER v3.6.0</title>
+<title>HANZET-SCRAPER v3.7.0</title>
 <link rel="icon" type="image/svg+xml" href="ui/assets/favicon.svg">
 <link rel="stylesheet" href="ui/css/tailwind.css">
 <link rel="stylesheet" href="ui/css/app.css">
+<style>
+.legal-overlay{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;overflow:auto;padding:20px;background:rgba(3,7,16,.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.legal-dialog{width:min(100%,760px);max-height:calc(100svh - 40px);overflow:auto;padding:clamp(22px,5vw,42px);border:1px solid #3b4d70;border-radius:24px;background:linear-gradient(145deg,#14213a,#0b1220 75%);box-shadow:0 28px 100px #000b}
+.legal-kicker{color:#70e1f5;font-size:.72rem;font-weight:900;letter-spacing:.16em}
+.legal-dialog h1{font-size:clamp(1.7rem,5vw,2.7rem);line-height:1.08;letter-spacing:-.05em;margin:15px 0}
+.legal-dialog p,.legal-points{color:#bdcbe1;font-size:.9rem;line-height:1.65}
+.legal-links{display:flex;flex-wrap:wrap;gap:9px;margin:20px 0}
+.legal-links a{padding:9px 12px;border:1px solid #354763;border-radius:10px;color:#a9d8ff;background:#111d31;text-decoration:none;font-size:.8rem;font-weight:800}
+.legal-links a:hover{border-color:#70e1f5}
+.legal-points{padding-left:20px}
+.legal-check{display:flex;align-items:flex-start;gap:10px;margin:22px 0 14px;padding:13px;border:1px solid #34435e;border-radius:12px;background:#0b1424;line-height:1.5}
+.legal-check input{width:18px;height:18px;flex:none;margin-top:2px;accent-color:#70e1f5}
+.legal-actions{display:flex;align-items:center;flex-wrap:wrap;gap:14px}
+.legal-actions button:disabled{opacity:.42;cursor:not-allowed;filter:grayscale(.4)}
+.legal-leave{color:#9baac4;font-size:.85rem}
+.legal-dialog .legal-footnote{font-size:.72rem;color:#8293af;margin-bottom:0}
+@media(max-width:560px){.legal-overlay{padding:10px}.legal-dialog{max-height:calc(100svh - 20px);padding:20px;border-radius:17px}.legal-links a{flex:1 1 42%}}
+</style>
 </head>
 <body>
+<section id="firstVisitNotice" class="legal-overlay" role="dialog" aria-modal="true" aria-labelledby="legalTitle" aria-describedby="legalSummary">
+  <div class="legal-dialog">
+    <div class="legal-kicker">BEFORE YOU CONTINUE · HANZET-SCRAPER v3.7.0</div>
+    <h1 id="legalTitle">Privacy, attribution &amp; responsible use</h1>
+    <p id="legalSummary">Please review these notices before using the scraper. URLs you submit are sent to the configured API and requested target websites. Infrastructure providers may process request metadata.</p>
+    <nav class="legal-links" aria-label="Important notices">
+      <a href="ui/legal/privacy-notice.html" target="_blank" rel="noopener noreferrer">Privacy Notice ↗</a>
+      <a href="ui/legal/attributions.html" target="_blank" rel="noopener noreferrer">Attributions &amp; Licenses ↗</a>
+      <a href="ui/legal/acceptable-use.html" target="_blank" rel="noopener noreferrer">Acceptable Use &amp; Safety ↗</a>
+      <a href="https://github.com/Hanzet22/Sekereper" target="_blank" rel="noopener noreferrer">Source &amp; License ↗</a>
+    </nav>
+    <ul class="legal-points">
+      <li>Only scrape public sites and content you are authorized to access.</li>
+      <li>Do not use this tool to bypass authentication, access controls, rate limits or CAPTCHAs.</li>
+      <li>Respect privacy, copyright, website terms and applicable law.</li>
+      <li>Results appear in this browser session; hosting or security providers may process operational metadata.</li>
+    </ul>
+    <label class="legal-check"><input id="legalAcknowledged" type="checkbox"> I have reviewed the notices and agree to use the service responsibly.</label>
+    <div class="legal-actions">
+      <button id="continueToApp" type="button" disabled>Continue to HANZET-SCRAPER</button>
+      <a class="legal-leave" href="https://github.com/Hanzet22/Sekereper">Leave this page</a>
+    </div>
+    <p class="legal-footnote">Your acknowledgement is saved in this browser only to avoid showing this notice on every visit. It is not an account or legal verification.</p>
+  </div>
+</section>
 <a class="skip-link sr-only" href="#workspace">Skip to workbench</a>
 <canvas id="ambient" aria-hidden="true"></canvas>
-<main class="shell">
+<main class="shell" inert>
 <header class="topbar">
 <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="ui/assets/icons.svg#icon-brand"></use></svg></span><span>HANZET / LAB</span></div>
 <div class="top-meta"><span class="pill">SCRAPER WORKBENCH</span><span id="apiState" class="status-pill" data-state="unknown" role="status" aria-live="polite"><i class="dot"></i><span id="apiStateText">API UNKNOWN</span></span></div>
@@ -23,7 +66,7 @@
 <div><div class="eyebrow"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="ui/assets/icons.svg#icon-sparkle"></use></svg> Modular scraping workbench</div>
 <h1><span>HANZET-</span><br><span>SCRAPER</span></h1>
 <p>Inspect public web content, run controlled batch requests, orchestrate bounded crawls, and export structured results — from one clean interface.</p></div>
-<aside class="hero-side"><div class="side-label">Current release</div><div class="side-value">v3.6.0 <span class="pill">STABLE UI</span></div><div class="side-note">Static + browser-rendered scraping · crawl lifecycle controls · JSON, CSV and NDJSON exports.</div></aside>
+<aside class="hero-side"><div class="side-label">Current release</div><div class="side-value">v3.7.0 <span class="pill">STABLE UI</span></div><div class="side-note">Static + browser-rendered scraping · crawl lifecycle controls · JSON, CSV and NDJSON exports.</div></aside>
 </section>
 <div class="notice"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="ui/assets/icons.svg#icon-shield-check"></use></svg><div><strong>Responsible use &amp; network safety.</strong> Only request public websites you are allowed to access. The backend blocks private/internal targets; respect site terms, rate limits, privacy, copyright and applicable law. The interface does not bypass access controls.</div></div>
 <div class="workspace" id="workspace" tabindex="-1">
@@ -66,9 +109,40 @@ Run a scrape, batch, or crawl job. Results will appear here.</pre></div>
 </section>
 </div>
 </div>
-<footer class="footer"><span>HANZET-SCRAPER · Research utility · v3.6.0</span><span><a href="https://github.com/Hanzet22/Sekereper" rel="noreferrer">Source on GitHub</a> · Respect site policies.</span></footer>
+<footer class="footer"><span>HANZET-SCRAPER · Research utility · v3.7.0</span><span><a href="ui/legal/privacy-notice.html">Privacy</a> · <a href="ui/legal/attributions.html">Attributions</a> · <a href="ui/legal/acceptable-use.html">Acceptable use</a> · <a href="https://github.com/Hanzet22/Sekereper" rel="noreferrer">Source on GitHub</a></span></footer>
 </main>
 <script src="ui/js/ambient-canvas.js" defer></script>
-<script src="ui/js/app.js" defer></script>
+<script>
+(() => {
+  'use strict';
+  const notice = document.getElementById('firstVisitNotice');
+  const app = document.querySelector('main.shell');
+  const checkbox = document.getElementById('legalAcknowledged');
+  const continueButton = document.getElementById('continueToApp');
+  const storageKey = 'hanzet-scraper-legal-ack-v1';
+  function startApp() {
+    notice.remove();
+    app.removeAttribute('inert');
+    const script = document.createElement('script');
+    script.src = 'ui/js/app.js';
+    script.defer = true;
+    document.body.appendChild(script);
+  }
+  try {
+    if (localStorage.getItem(storageKey) === 'accepted') {
+      startApp();
+      return;
+    }
+  } catch (_) { /* If storage is blocked, show the notice on each visit. */ }
+  app.setAttribute('inert', '');
+  checkbox.addEventListener('change', () => { continueButton.disabled = !checkbox.checked; });
+  continueButton.addEventListener('click', () => {
+    if (!checkbox.checked) return;
+    try { localStorage.setItem(storageKey, 'accepted'); } catch (_) { /* Acknowledge for this visit only. */ }
+    startApp();
+  });
+  checkbox.focus();
+})();
+</script>
 </body>
 </html>
