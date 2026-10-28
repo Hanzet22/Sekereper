@@ -35,24 +35,83 @@ function safeLookup(hostname, options, callback) {
   }).catch(callback);
 }
 
+function classifyPage(html) {
+  const $ = cheerio.load(html);
+  const title = $('title').text().replace(/\s+/g, ' ').trim();
+  const bodyText = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 12000);
+  const lower = (title + ' ' + bodyText).toLowerCase();
+  const mainText = $('main,article,[role="main"]').first().text().replace(/\s+/g, ' ').trim();
+  const bodyLength = bodyText.length;
+
+  if (/browser not supported|unsupported browser|browser is not supported|please use a supported browser|update your browser to continue/i.test(title) ||
+      (/browser not supported|unsupported browser|browser is not supported|please use a supported browser/i.test(bodyText) && bodyLength < 2500)) {
+    return { status: 'unsupported_browser', usable: false, reason: 'browser_not_supported' };
+  }
+  if (/^(sign in|log in|login required|authentication required|sign in to continue|log in to continue)$/i.test(title) ||
+      /you must be (?:logged|signed) in to continue|authentication is required to view this page|please sign in to continue|login required to view this page/i.test(bodyText)) {
+    return { status: 'login_required', usable: false, reason: 'login_wall' };
+  }
+  if (/^(cookie preferences|privacy preferences|consent required)$/i.test(title) ||
+      (bodyLength < 700 && /we use cookies to|your privacy choices/.test(lower) && /accept all|reject all|manage preferences/.test(lower))) {
+    return { status: 'consent_required', usable: false, reason: 'consent_interstitial' };
+  }
+  const hasAppShell = $('#root,#app,#__next,[data-reactroot]').length > 0;
+  const hasDescription = Boolean($('meta[name="description"]').attr('content') || $('meta[property="og:description"]').attr('content'));
+  if (bodyLength < 80 && (hasAppShell || $('script').length > 2) && !hasDescription) {
+    return { status: 'empty_shell', usable: false, reason: 'javascript_render_required' };
+  }
+  return {
+    status: 'usable',
+    usable: true,
+    reason: null,
+    contentSource: mainText.length >= 80 ? 'main' : 'document',
+  };
+}
+
 function extractData(html, url) {
   const $ = cheerio.load(html);
-  const headings = $('h1,h2,h3,h4,h5,h6').slice(0, 100).map((_, el) => ({
-    tag: el.tagName, text: $(el).text().trim().slice(0, 500),
-  })).get();
-  const paragraphs = $('p').slice(0, 100).map((_, el) => $(el).text().trim().slice(0, 1500))
-    .get().filter(text => text.length > 20);
-  const links = $('a[href]').slice(0, 200).map((_, el) => ({
-    href: $(el).attr('href'), text: $(el).text().trim().slice(0, 200),
-  })).get();
-  const images = $('img').slice(0, 100).map((_, el) => ({
-    src: $(el).attr('src') || $(el).attr('data-src') || '',
-    alt: ($(el).attr('alt') || '').slice(0, 300),
-  })).get().filter(image => image.src);
+  const title = $('title').text().replace(/\s+/g, ' ').trim().slice(0, 500);
+  const page = classifyPage(html);
+  const headingSeen = new Set();
+  const headings = $('h1,h2,h3,h4,h5,h6').slice(0, 150).map((_, el) => {
+    const text = $(el).text().replace(/\s+/g, ' ').trim().slice(0, 500);
+    const key = text.toLocaleLowerCase();
+    if (!text || headingSeen.has(key)) return null;
+    headingSeen.add(key);
+    return { tag: el.tagName, text };
+  }).get().filter(Boolean).slice(0, 100);
+
+  const contentRoot = $('main,article,[role="main"]').first().length
+    ? $('main,article,[role="main"]').first().clone()
+    : $('body').clone();
+  contentRoot.find('script,style,noscript,template,svg,nav,header,footer,aside,form,button,[aria-hidden="true"]').remove();
+  const text = contentRoot.text().replace(/\u00a0/g, ' ').replace(/[ \t]+\n/g, '\n')
+    .replace(/\n[ \t]+/g, '\n').replace(/\s+/g, ' ').trim().slice(0, 100000);
+
+  const paragraphSeen = new Set();
+  const paragraphs = $('p').slice(0, 200).map((_, el) => $(el).text().replace(/\s+/g, ' ').trim().slice(0, 1500))
+    .get().filter(value => value.length > 20).filter(value => {
+      const key = value.toLocaleLowerCase();
+      if (paragraphSeen.has(key)) return false;
+      paragraphSeen.add(key);
+      return true;
+    }).slice(0, 100);
+  const links = $('a[href]').slice(0, 250).map((_, el) => {
+    const raw = $(el).attr('href');
+    let href = raw;
+    try { href = new URL(raw, url).href; } catch {}
+    return { href, text: $(el).text().replace(/\s+/g, ' ').trim().slice(0, 200) };
+  }).get();
+  const images = $('img').slice(0, 100).map((_, el) => {
+    const raw = $(el).attr('src') || $(el).attr('data-src') || $(el).attr('data-lazy-src') || '';
+    let src = raw;
+    try { if (raw) src = new URL(raw, url).href; } catch {}
+    return { src, alt: ($(el).attr('alt') || '').replace(/\s+/g, ' ').trim().slice(0, 300) };
+  }).get().filter(image => image.src);
   const tables = $('table').slice(0, 20).map((i, table) => ({
     tableIndex: i,
     rows: $(table).find('tr').slice(0, 50).map((_, tr) =>
-      [$(tr).find('th,td').slice(0, 20).map((_, cell) => $(cell).text().trim().slice(0, 500)).get()]
+      $(tr).find('th,td').slice(0, 20).map((_, cell) => $(cell).text().replace(/\s+/g, ' ').trim().slice(0, 500)).get()
     ).get(),
   })).get();
   const og = {};
@@ -63,20 +122,21 @@ function extractData(html, url) {
   $('script[type="application/ld+json"]').slice(0, 20).each((_, el) => {
     try { jsonLd.push(JSON.parse($(el).text().slice(0, 100_000))); } catch {}
   });
+  const description = ($('meta[name="description"]').attr('content') || '').slice(0, 1000);
+  let canonical = $('link[rel="canonical"]').attr('href') || '';
+  try { if (canonical) canonical = new URL(canonical, url).href; } catch {}
   return {
-    meta: {
-      url, title: $('title').text().trim().slice(0, 500),
-      description: ($('meta[name="description"]').attr('content') || '').slice(0, 1000),
-      canonical: ($('link[rel="canonical"]').attr('href') || '').slice(0, 2000),
-      scrapedAt: new Date().toISOString(),
-    },
+    page,
+    text,
+    meta: { url, title, description, canonical: canonical.slice(0, 2000), scrapedAt: new Date().toISOString() },
     og, headings, paragraphs, links, images, tables, jsonLd,
-    stats: { headingCount: headings.length, paragraphCount: paragraphs.length,
-      linkCount: links.length, imageCount: images.length, tableCount: tables.length,
-      htmlSize: Buffer.byteLength(html) },
+    stats: {
+      headingCount: headings.length, paragraphCount: paragraphs.length, linkCount: links.length,
+      imageCount: images.length, tableCount: tables.length, textLength: text.length,
+      htmlSize: Buffer.byteLength(html), contentDensity: Math.round(text.length / Math.max(1, Buffer.byteLength(html)) * 1000) / 1000,
+    },
   };
 }
-
 
 function detectChallenge(html) {
   const $ = cheerio.load(html);
@@ -120,7 +180,7 @@ async function fetchStatic(inputUrl, signal) {
       const response = await new Promise((resolve, reject) => {
         const request = transport.request(url, {
           method: 'GET', agent, signal: controller.signal,
-          headers: { 'User-Agent': 'HANZET-SCRAPER/3.0 (+respectful research client)', Accept: 'text/html,application/xhtml+xml;q=0.9' },
+          headers: { 'User-Agent': 'HANZET-SCRAPER/3.5 (+respectful research client)', Accept: 'text/html,application/xhtml+xml;q=0.9', 'Accept-Encoding': 'identity' },
         }, resolve);
         request.on('error', reject);
         request.end();
@@ -249,4 +309,4 @@ async function scrape(inputUrl, mode = 'static', options = {}) {
   throw new Error('mode must be "static" or "dynamic"');
 }
 
-module.exports = { scrape, extractData, detectChallenge };
+module.exports = { scrape, extractData, detectChallenge, classifyPage };

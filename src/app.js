@@ -6,6 +6,12 @@ const { randomUUID, timingSafeEqual } = require('node:crypto');
 const { config } = require('./config');
 const { rateLimit } = require('./middleware/rate-limit');
 const { scrape } = require('./services/scraper');
+
+function resultQuality(data) {
+  const page = data?.page;
+  if (!page || page.usable !== false) return null;
+  return { status: page.status, reason: page.reason, retryable: page.status === 'empty_shell' };
+}
 const { createCrawlJob, listJobs, getJob, controlJob, getResults, publicJob } = require('./services/job-manager');
 const { toCSV, toNDJSON, flattenResult, compareResults } = require('./services/exporters');
 const { listAdapters } = require('./plugins');
@@ -57,7 +63,7 @@ function createApp() {
 
   app.get('/health', (_req, res) => res.json({
     status: 'ok', version: '3.5.0',
-    capabilities: { static: true, dynamic: true, batch: true, crawlJobs: true, export: ['json','csv','ndjson'], feeds: ['rss','atom'], adapters: true, compare: true },
+    capabilities: { static: true, dynamic: true, batch: true, crawlJobs: true, export: ['json','csv','ndjson'], feeds: ['rss','atom'], adapters: true, compare: true, contentClassification: true, textExtraction: true },
     security: { publicHttpTargetsOnly: true, adminDisabled: !config.adminToken },
   }));
 
@@ -69,7 +75,8 @@ function createApp() {
     const started = Date.now();
     try {
       const data = await scrape(url, mode);
-      return res.json({ success: true, jobId, elapsedMs: Date.now() - started, mode, data });
+      const quality = resultQuality(data);
+      return res.json({ success: !quality, ...(quality || { status: 'success' }), jobId, elapsedMs: Date.now() - started, mode, data });
     } catch (error) {
       if (error.code === 'SCRAPE_BLOCKED') {
         return res.status(200).json({ success: false, status: 'blocked', reason: error.reason || 'anti_bot_challenge', retryable: false, jobId, elapsedMs: Date.now() - started, mode, error: error.message });
@@ -92,7 +99,11 @@ function createApp() {
       while (true) {
         const index = next++;
         if (index >= urls.length) return;
-        try { results[index] = { url: urls[index], success: true, data: await scrape(urls[index], mode) }; }
+        try {
+          const data = await scrape(urls[index], mode);
+          const quality = resultQuality(data);
+          results[index] = { url: urls[index], success: !quality, ...(quality || { status: 'success' }), data };
+        }
         catch (error) { results[index] = { url: urls[index], success: false, ...(error.code === 'SCRAPE_BLOCKED' ? { status: 'blocked', reason: error.reason || 'anti_bot_challenge', retryable: false } : {}), error: error.message || 'Scrape failed' }; }
       }
     }

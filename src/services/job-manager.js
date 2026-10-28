@@ -89,7 +89,15 @@ async function runJob(job) {
         if (wait > 0) await sleep(wait);
         job.lastDomainRequest.set(safe.origin, Date.now());
         const data = await scrape(normalized, job.mode, { signal: job.abortController.signal });
-        job.results.push({url:normalized,depth:item.depth,success:true,data});
+        if (data?.page?.usable === false) {
+          job.results.push({
+            url: normalized, depth: item.depth, success: false,
+            status: data.page.status, reason: data.page.reason, retryable: data.page.status === 'empty_shell', data,
+          });
+          job.failed++;
+          continue;
+        }
+        job.results.push({url:normalized,depth:item.depth,success:true,status:'success',data});
         job.succeeded++;
         if (item.depth < job.maxDepth) {
           for (const link of data.links || []) {
