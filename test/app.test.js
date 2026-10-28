@@ -16,7 +16,7 @@ test('health endpoint reports v3.5 capabilities', async t => {
     const response = await fetch(base + '/health');
     assert.equal(response.status, 200);
     const body = await response.json();
-    assert.equal(body.version, '3.5.0');
+    assert.equal(body.version, '3.6.0');
     assert.equal(body.status, 'ok');
     assert.equal(body.capabilities.crawlJobs, true);
     assert.ok(body.capabilities.export.includes('csv'));

@@ -204,10 +204,15 @@ function createApp() {
 
   app.use((req, res) => sendError(req, res, { status: 404, code: '404', title: 'Page Not Found', message: 'This route does not exist.', detail: 'Check the URL and try again.' }));
   app.use((error, req, res, _next) => {
+    const wantsHtml = String(req?.headers?.accept || '').includes('text/html');
     if (error?.type === 'entity.too.large' || error?.status === 413 || error?.statusCode === 413) {
-      return sendError(req, res, { status: 413, code: '413', title: 'Payload Too Large', message: 'Request body exceeds the 32kb limit.' });
+      if (wantsHtml) return sendError(req, res, { status: 413, code: '413', title: 'Payload Too Large', message: 'Request body exceeds the 32kb limit' });
+      return res.status(413).json({ error: 'Request body exceeds the 32kb limit' });
     }
-    if (error instanceof SyntaxError && 'body' in error) return sendError(req, res, { status: 400, code: '400', title: 'Bad Request', message: 'Invalid JSON body.' });
+    if (error instanceof SyntaxError && 'body' in error) {
+      if (wantsHtml) return sendError(req, res, { status: 400, code: '400', title: 'Bad Request', message: 'Invalid JSON body' });
+      return res.status(400).json({ error: 'Invalid JSON body' });
+    }
     console.error('[HANZET-SCRAPER] Unhandled request error:', error.message);
     return sendError(req, res, { status: 500, code: '500', title: 'Internal Server Error', message: 'The server could not complete this request.' });
   });
