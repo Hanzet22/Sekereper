@@ -6,6 +6,7 @@ const { randomUUID, timingSafeEqual } = require('node:crypto');
 const { config } = require('./config');
 const { rateLimit } = require('./middleware/rate-limit');
 const { scrape } = require('./services/scraper');
+const { sendError } = require('./security/error-pages');
 
 function resultQuality(data) {
   const page = data?.page;
@@ -62,9 +63,27 @@ function createApp() {
   app.use(rateLimit);
 
   app.get('/health', (_req, res) => res.json({
-    status: 'ok', version: '3.5.0',
-    capabilities: { static: true, dynamic: true, batch: true, crawlJobs: true, export: ['json','csv','ndjson'], feeds: ['rss','atom'], adapters: true, compare: true, contentClassification: true, textExtraction: true },
+    status: 'ok', version: '3.6.0',
+    capabilities: { static: true, dynamic: true, batch: true, crawlJobs: true, export: ['json','csv','ndjson'], feeds: ['rss','atom'], adapters: true, compare: true, contentClassification: true, textExtraction: true, customErrorPages: true },
     security: { publicHttpTargetsOnly: true, adminDisabled: !config.adminToken },
+  }));
+
+  // HTTP 1998 is not a valid HTTP status. It is an application-specific code
+  // carried with HTTP 403; this route is a themed restricted-page endpoint,
+  // not an IP/VPN detector. VPN use alone is not evidence of abuse.
+  app.all('/Restricted', (req, res) => sendError(req, res, {
+    status: 403,
+    code: '1998',
+    title: 'Access Restricted',
+    message: 'You kontol, pake VPN buat bypass anjeng.',
+    detail: 'Restriction code 1998. This page demonstrates the custom restricted response; VPN/proxy use alone does not trigger a block.',
+  }));
+  app.all(['/418', '/teapot'], (req, res) => sendError(req, res, {
+    status: 418,
+    code: '418',
+    title: "I'm a teapot",
+    message: 'This endpoint refuses to brew coffee.',
+    detail: 'A custom HTTP 418 page, because every scraper deserves one tiny teapot joke.',
   }));
 
   app.post('/scrape', async (req, res) => {
@@ -183,14 +202,14 @@ function createApp() {
     crawlJobs: listJobs().length,
   }));
 
-  app.use((req, res) => res.status(404).json({ error: 'Not found' }));
-  app.use((error, _req, res, _next) => {
+  app.use((req, res) => sendError(req, res, { status: 404, code: '404', title: 'Page Not Found', message: 'This route does not exist.', detail: 'Check the URL and try again.' }));
+  app.use((error, req, res, _next) => {
     if (error?.type === 'entity.too.large' || error?.status === 413 || error?.statusCode === 413) {
-      return res.status(413).json({ error: 'Request body exceeds the 32kb limit' });
+      return sendError(req, res, { status: 413, code: '413', title: 'Payload Too Large', message: 'Request body exceeds the 32kb limit.' });
     }
-    if (error instanceof SyntaxError && 'body' in error) return res.status(400).json({ error: 'Invalid JSON body' });
+    if (error instanceof SyntaxError && 'body' in error) return sendError(req, res, { status: 400, code: '400', title: 'Bad Request', message: 'Invalid JSON body.' });
     console.error('[HANZET-SCRAPER] Unhandled request error:', error.message);
-    return res.status(500).json({ error: 'Internal server error' });
+    return sendError(req, res, { status: 500, code: '500', title: 'Internal Server Error', message: 'The server could not complete this request.' });
   });
   return app;
 }

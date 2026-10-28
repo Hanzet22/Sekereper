@@ -1,6 +1,6 @@
 {
   "name": "hanzet-scraper",
-  "version": "3.5.0",
+  "version": "3.6.0",
   "private": true,
   "description": "Modular HTTP(S) crawler and scraper with bounded jobs, exports, and SSRF protections",
   "main": "server.js",
