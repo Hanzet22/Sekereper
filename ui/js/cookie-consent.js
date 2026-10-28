@@ -13,6 +13,7 @@
     preferences = {version:1,updatedAt:new Date().toISOString(),categories:value};
     try { localStorage.setItem(key,JSON.stringify(preferences)); } catch (_) {}
     window.dispatchEvent(new CustomEvent('hanzet:cookie-consent-changed',{detail:preferences}));
+    if (value.essential !== true) fetch('/challenge/consent/revoke',{method:'POST',credentials:'same-origin'}).catch(()=>{});
     hideBanner(); closeSettings();
   };
   function hideBanner(){if(banner){banner.remove();banner=null;}}
