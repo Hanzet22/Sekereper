@@ -80,3 +80,28 @@ test('HTML5 workbench and split UI assets are served by Express', async t => {
     }
   });
 });
+
+test('malformed JSON body returns HTTP 400', async t => {
+  await withServer(t, async base => {
+    const response = await fetch(base + '/parse/feed', {
+      method: 'POST',
+      headers: {'content-type':'application/json'},
+      body: '{"xml":'
+    });
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), {error:'Invalid JSON body'});
+  });
+});
+
+test('oversized JSON body returns HTTP 413 instead of HTTP 500', async t => {
+  await withServer(t, async base => {
+    const response = await fetch(base + '/parse/feed', {
+      method: 'POST',
+      headers: {'content-type':'application/json'},
+      body: JSON.stringify({xml:'x'.repeat(40 * 1024)})
+    });
+    assert.equal(response.status, 413);
+    assert.match((await response.json()).error, /32kb limit/i);
+  });
+});
+
