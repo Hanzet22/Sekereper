@@ -80,6 +80,9 @@ async function proxyChallenge(req, res, next) {
 }
 async function verifyChallenge(req, res) {
   if (!configured()) return res.status(503).json({ success: false, error: 'Challenge protection is not configured. Set IPQS_API_KEY, TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY and CHALLENGE_SIGNING_SECRET (32+ characters).' });
+  if (req.headers['x-hanzet-essential-consent'] !== 'true') {
+    return res.status(428).json({ success: false, error: 'Essential / Security cookie consent is required to load and complete this optional challenge. Update Cookie Preferences first.' });
+  }
   const ip = requestIp(req);
   const token = typeof req.body?.token === 'string' ? req.body.token : '';
   if (!ip || !token || token.length > 4096) return res.status(400).json({ success: false, error: 'Missing or invalid challenge token.' });
