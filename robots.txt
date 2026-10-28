@@ -1,0 +1,11 @@
+# Helo ges Welkom Bak Tu Mai mainkeraft canel, disini cuma adanya
+User-agent: *
+Disallow: /disallow
+Disallow: /free robux
+Disallow: /gran turismo bajakan 100% free no Virus
+Allow: /Gila Mennnn
+Allow: /awokawokawok
+
+# Dan elu ngapain disini? Gak ada .env sini awokawokawok,
+# lu kira kayak web sebelah masukin .env di robots.txt walau udah make WAF?
+# Sori ye awokawokawok
