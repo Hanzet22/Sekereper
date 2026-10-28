@@ -2,13 +2,13 @@
 
 A modular HTTP(S) scraping workbench built with Node.js, Express, Cheerio, and Playwright. V3.5 adds bounded crawl jobs, pause/resume/cancel controls, structured exports, feed and discovery parsers, result comparison, and an adapter extension contract.
 
-> Use only for public resources you are permitted to access. Respect site terms, robots directives, rate limits, copyright, privacy, and applicable law.
+> Use only for public resources you are permitted to access. Respect site terms, rate limits, copyright, privacy, and applicable law.
 
 ## What's new in v3.5
 
 - Crawl jobs: seed URLs, bounded page count and depth, same-origin default, per-domain delay, progress, pause/resume/cancel, and job result retrieval.
 - Structured exports: JSON, CSV, and NDJSON.
-- Discovery parsers: parse supplied sitemap XML and robots.txt text.
+- Discovery parser: parse supplied sitemap XML.
 - Feed parser: parse supplied RSS/Atom XML into structured items.
 - Data comparison: report additions, removals, and changed results.
 - Adapter foundation: explicit host-code registration contract for future parsers.
@@ -26,7 +26,7 @@ A modular HTTP(S) scraping workbench built with Node.js, Express, Cheerio, and P
 - src/services/job-manager.js — in-memory crawl lifecycle/orchestration
 - src/services/exporters.js — CSV/NDJSON and comparison helpers
 - src/services/feed-parser.js — RSS/Atom parsing
-- src/services/discovery-parser.js — sitemap/robots parsing
+- src/services/discovery-parser.js — sitemap parsing
 - src/plugins/index.js — explicit adapter registration contract
 - test/ — Node built-in test suite
 - deprecated/ — archived V2 rate-limiter prototypes; not loaded by V3
@@ -38,7 +38,7 @@ A modular HTTP(S) scraping workbench built with Node.js, Express, Cheerio, and P
 - Static requests revalidate redirects and use a custom DNS lookup to reject private/reserved destinations.
 - Dynamic browser requests are restricted to the same origin; cross-origin subresources, service workers, downloads, fonts, and media are blocked. This improves isolation but can break sites relying on third-party scripts or CDNs.
 - Crawl jobs have a maximum of 100 pages, depth 5, bounded seed list, and bounded per-domain delay. Queue and job history are in-memory.
-- Robots and sitemap endpoints parse text/XML supplied by the caller. They do not yet automatically fetch robots.txt or sitemap URLs, and robots rules are not automatically enforced by the crawler. Check site policies before crawling.
+- The sitemap endpoint parses XML supplied by the caller; it does not automatically fetch sitemap URLs.
 - Adapter registration is a host-code extension interface, not a remote plugin installer. Do not load untrusted code as plugins.
 - Rate limits, crawl history, and results are in-memory and disappear on restart. Use a durable queue/database before production multi-instance deployment.
 - Dynamic browser byte accounting is best-effort; OS/container limits and firewall rules are recommended for defense in depth.
@@ -129,7 +129,6 @@ Crawling is constrained by page/depth limits and domain delay. Same-origin mode 
 - GET /adapters — list adapters registered by application code.
 - POST /parse/feed — parse supplied RSS/Atom XML in the xml field.
 - POST /parse/sitemap — parse supplied sitemap XML in the xml field.
-- POST /parse/robots — parse supplied robots.txt text in the text field.
 
 These endpoints parse caller-supplied content; they do not fetch arbitrary remote files.
 
