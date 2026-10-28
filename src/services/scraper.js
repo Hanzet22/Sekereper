@@ -77,6 +77,29 @@ function extractData(html, url) {
   };
 }
 
+
+function detectChallenge(html) {
+  const $ = cheerio.load(html);
+  const title = $('title').text().trim();
+  const bodyText = $('body').text().replace(/\\s+/g, ' ').trim().slice(0, 12000);
+  const normalizedTitle = title.toLowerCase();
+  const normalizedBody = bodyText.toLowerCase();
+  const normalizedHtml = String(html).slice(0, 30000).toLowerCase();
+  const cloudflareMarker = /cf-chl-|__cf_chl|challenge-platform|cdn-cgi\\/challenge-platform/.test(normalizedHtml);
+  const challengeTitle = /^(just a moment\\.?|attention required!?|security check required)$/i.test(title);
+  const challengePhrase = /verify you are human|checking your browser|performing security verification|enable javascript and cookies to continue|complete the security check|please wait while we verify/.test(normalizedBody);
+  if (cloudflareMarker || (challengeTitle && challengePhrase)) return 'cloudflare_challenge';
+  if (challengePhrase || /access denied by security policy|automated requests are not allowed/.test(normalizedBody)) return 'anti_bot_challenge';
+  return null;
+}
+
+function makeChallengeError(reason) {
+  const error = new Error('Target returned an anti-bot challenge; Sekereper does not bypass it.');
+  error.code = 'SCRAPE_BLOCKED';
+  error.reason = reason;
+  return error;
+}
+
 async function fetchStatic(inputUrl, signal) {
   let url = await validateTarget(inputUrl);
   for (let redirects = 0; redirects <= config.maxRedirects; redirects++) {
@@ -130,7 +153,10 @@ async function fetchStatic(inputUrl, signal) {
         }
         chunks.push(chunk);
       }
-      return extractData(Buffer.concat(chunks).toString('utf8'), url.href);
+      const html = Buffer.concat(chunks).toString('utf8');
+      const challengeReason = detectChallenge(html);
+      if (challengeReason) throw makeChallengeError(challengeReason);
+      return extractData(html, url.href);
     } catch (error) {
       if (timedOut) throw new Error(`Request timed out after ${config.requestTimeoutMs} ms`);
       if (signal?.aborted) throw new Error('Scrape cancelled');
@@ -208,6 +234,8 @@ async function fetchDynamic(inputUrl, signal) {
     if (totalBytes > config.maxResponseBytes) throw new Error('Page exceeded configured response size limit');
     const html = await page.content();
     if (Buffer.byteLength(html) > config.maxResponseBytes) throw new Error('Rendered HTML exceeded configured size limit');
+    const challengeReason = detectChallenge(html);
+    if (challengeReason) throw makeChallengeError(challengeReason);
     return extractData(html, page.url());
   } finally {
     if (abortPage) signal?.removeEventListener('abort', abortPage);
@@ -222,4 +250,4 @@ async function scrape(inputUrl, mode = 'static', options = {}) {
   throw new Error('mode must be "static" or "dynamic"');
 }
 
-module.exports = { scrape, extractData };
+module.exports = { scrape, extractData, detectChallenge };

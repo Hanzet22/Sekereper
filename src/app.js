@@ -26,6 +26,9 @@ function createApp() {
     res.setHeader('Referrer-Policy', 'no-referrer');
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
     next();
   });
   app.use(express.json({ limit: '32kb', strict: true }));
@@ -68,6 +71,9 @@ function createApp() {
       const data = await scrape(url, mode);
       return res.json({ success: true, jobId, elapsedMs: Date.now() - started, mode, data });
     } catch (error) {
+      if (error.code === 'SCRAPE_BLOCKED') {
+        return res.status(200).json({ success: false, status: 'blocked', reason: error.reason || 'anti_bot_challenge', retryable: false, jobId, elapsedMs: Date.now() - started, mode, error: error.message });
+      }
       const status = /private|internal|credentials|protocol|hostname|URL|port|redirect|resolved|HTTP [45]|HTML|size limit/i.test(error.message) ? 400 : 502;
       return res.status(status).json({ success: false, jobId, error: error.message || 'Scrape failed' });
     }
@@ -87,7 +93,7 @@ function createApp() {
         const index = next++;
         if (index >= urls.length) return;
         try { results[index] = { url: urls[index], success: true, data: await scrape(urls[index], mode) }; }
-        catch (error) { results[index] = { url: urls[index], success: false, error: error.message || 'Scrape failed' }; }
+        catch (error) { results[index] = { url: urls[index], success: false, ...(error.code === 'SCRAPE_BLOCKED' ? { status: 'blocked', reason: error.reason || 'anti_bot_challenge', retryable: false } : {}), error: error.message || 'Scrape failed' }; }
       }
     }
     await Promise.all(Array.from({ length: Math.min(config.maxConcurrentJobs, urls.length) }, worker));

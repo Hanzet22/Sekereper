@@ -6,9 +6,17 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       matrix:
         node-version: [20, 22]
@@ -17,6 +25,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm install
+      - run: npm install --no-audit --no-fund
+      - run: npm audit --audit-level=high
       - run: npm run build:ui:css
       - run: npm test
