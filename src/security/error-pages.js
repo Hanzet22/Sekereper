@@ -39,6 +39,11 @@ ${safeDetail ? `<div class="detail">${safeDetail}</div>` : ''}
 </main></body></html>`;
 }
 
+
+function renderChallengePage(siteKey) {
+  const safeKey = escapeHtml(siteKey || '');
+  return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>1998 · Security Challenge — HANZET-SCRAPER</title><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><style>:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#080c16;color:#eef2ff}*{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 15% 5%,#172554,transparent 42%),#080c16}main{width:min(100%,620px);padding:clamp(24px,6vw,48px);border:1px solid #334155;border-radius:24px;background:#0f172a}small{letter-spacing:.18em;color:#93c5fd;font-weight:800}.code{font-size:clamp(4rem,16vw,7rem);font-weight:900;line-height:1;margin:24px 0}p{line-height:1.7;color:#cbd5e1}.widget{margin:24px 0}.error{color:#fca5a5;min-height:1.5em}button{border:0;border-radius:12px;background:#dbeafe;color:#0f172a;padding:12px 18px;font-weight:800;cursor:pointer}a{color:#93c5fd}</style></head><body><main><small>HANZET / SECURITY CHALLENGE</small><div class="code">1998</div><h1>Verify this request</h1><p>Your connection has a risk signal associated with VPN/proxy infrastructure. Complete verification to continue. VPN use alone is not proof of abuse.</p><form id="challenge-form"><div class="widget"><div class="cf-turnstile" data-sitekey="' + safeKey + '" data-theme="dark"></div></div><p id="challenge-error" class="error" role="status"></p><button type="submit">Verify &amp; continue</button></form><p><a href="/">Return to workbench</a></p></main><script>document.getElementById("challenge-form").addEventListener("submit",async function(e){e.preventDefault();var out=document.getElementById("challenge-error");var field=document.querySelector("[name=cf-turnstile-response]");var token=field&&field.value;if(!token){out.textContent="Complete the challenge first.";return;}out.textContent="Verifying…";try{var response=await fetch("/challenge/verify",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({token:token})});var data=await response.json();if(!response.ok||!data.success)throw new Error(data.error||"Verification failed");location.assign("/");}catch(error){out.textContent=error.message||"Verification failed. Try again.";if(window.turnstile)window.turnstile.reset();}});</script></body></html>';
+}
 function sendError(req, res, options) {
   const { status = 500, code = String(status), title = 'Request Error', message = 'The request could not be completed.', detail } = options || {};
   res.setHeader('X-Error-Code', String(code));
@@ -57,4 +62,4 @@ function sendError(req, res, options) {
   });
 }
 
-module.exports = { escapeHtml, renderErrorPage, sendError };
+module.exports = { escapeHtml, renderErrorPage, renderChallengePage, sendError };

@@ -11,12 +11,12 @@ async function withServer(t, callback) {
   return callback(`http://127.0.0.1:${server.address().port}`);
 }
 
-test('health endpoint reports v3.5 capabilities', async t => {
+test('health endpoint reports v3.7 capabilities', async t => {
   await withServer(t, async base => {
     const response = await fetch(base + '/health');
     assert.equal(response.status, 200);
     const body = await response.json();
-    assert.equal(body.version, '3.6.0');
+    assert.equal(body.version, '3.7.0');
     assert.equal(body.status, 'ok');
     assert.equal(body.capabilities.crawlJobs, true);
     assert.ok(body.capabilities.export.includes('csv'));
@@ -105,3 +105,29 @@ test('oversized JSON body returns HTTP 413 instead of HTTP 500', async t => {
   });
 });
 
+
+test('custom HTTP error routes return themed HTML for browsers', async t => {
+  await withServer(t, async base => {
+    for (const [path, status, code] of [['/missing-route-1998',404,'404'], ['/418',418,'418'], ['/Restricted',403,'1998']]) {
+      const response = await fetch(base + path, { headers: { Accept: 'text/html' } });
+      assert.equal(response.status, status, path);
+      assert.equal(response.headers.get('x-error-code'), code);
+      assert.match(response.headers.get('content-type') || '', /text\/html/i);
+      assert.match(await response.text(), new RegExp(code));
+    }
+    const oversized = await fetch(base + '/parse/feed', { method:'POST', headers:{'content-type':'application/json',Accept:'text/html'}, body:JSON.stringify({xml:'x'.repeat(40*1024)}) });
+    assert.equal(oversized.status, 413);
+    assert.equal(oversized.headers.get('x-error-code'), '413');
+    assert.match(await oversized.text(), /Payload Too Large/);
+  });
+});
+test('rate limit returns HTTP 429 and Retry-After after the configured burst', async t => {
+  await withServer(t, async base => {
+    let last;
+    for (let i=0; i<31; i++) last = await fetch(base + '/rate-limit-probe');
+    assert.equal(last.status, 429);
+    assert.ok(Number(last.headers.get('retry-after')) >= 1);
+    assert.equal(last.headers.get('x-error-code'), '429');
+    assert.match(await last.text(), /Too Many Requests/);
+  });
+});

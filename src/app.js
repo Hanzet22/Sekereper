@@ -6,7 +6,8 @@ const { randomUUID, timingSafeEqual } = require('node:crypto');
 const { config } = require('./config');
 const { rateLimit } = require('./middleware/rate-limit');
 const { scrape } = require('./services/scraper');
-const { sendError } = require('./security/error-pages');
+const { sendError, renderChallengePage } = require('./security/error-pages');
+const { configured: challengeConfigured, proxyChallenge, verifyChallenge } = require('./security/proxy-challenge');
 
 function resultQuality(data) {
   const page = data?.page;
@@ -61,10 +62,18 @@ function createApp() {
   }));
 
   app.use(rateLimit);
+  app.use(proxyChallenge);
+
+  app.get('/challenge', (req, res) => {
+    if (!challengeConfigured()) return sendError(req, res, { status: 503, code: '503', title: 'Challenge Not Configured', message: 'VPN/proxy challenge protection is not configured.', detail: 'Configure IPQS_API_KEY, TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY, and CHALLENGE_SIGNING_SECRET.' });
+    res.setHeader('Cache-Control', 'no-store');
+    return res.type('html').send(renderChallengePage(process.env.TURNSTILE_SITE_KEY));
+  });
+  app.post('/challenge/verify', verifyChallenge);
 
   app.get('/health', (_req, res) => res.json({
-    status: 'ok', version: '3.6.0',
-    capabilities: { static: true, dynamic: true, batch: true, crawlJobs: true, export: ['json','csv','ndjson'], feeds: ['rss','atom'], adapters: true, compare: true, contentClassification: true, textExtraction: true, customErrorPages: true },
+    status: 'ok', version: '3.7.0',
+    capabilities: { static: true, dynamic: true, batch: true, crawlJobs: true, export: ['json','csv','ndjson'], feeds: ['rss','atom'], adapters: true, compare: true, contentClassification: true, textExtraction: true, customErrorPages: true, proxyChallenge: challengeConfigured() },
     security: { publicHttpTargetsOnly: true, adminDisabled: !config.adminToken },
   }));
 

@@ -1,8 +1,14 @@
-# HANZET-SCRAPER v3.5.0 — Crawl Orchestrator
+# HANZET-SCRAPER v3.7.0 — Crawl Orchestrator
 
 A modular HTTP(S) scraping workbench built with Node.js, Express, Cheerio, and Playwright. V3.5 adds bounded crawl jobs, pause/resume/cancel controls, structured exports, feed and discovery parsers, result comparison, and an adapter extension contract.
 
 > Use only for public resources you are permitted to access. Respect site terms, rate limits, copyright, privacy, and applicable law.
+
+## What's new in v3.7
+
+- Custom error pages for HTTP 404, 429, 418 and 413, plus application code 1998 over HTTP 403.
+- Optional VPN/proxy risk challenge via IPQualityScore and Cloudflare Turnstile, with signed IP-bound verification cookies valid for 30 minutes.
+- VPN/proxy use is a risk signal, not proof of abuse. If the reputation provider is unavailable, requests fail open rather than locking everyone out.
 
 ## What's new in v3.5
 
@@ -90,7 +96,20 @@ Open http://localhost:3000. Configure CORS_ORIGINS if using a different browser 
 | MAX_BATCH_SIZE | 5 | Batch seed URLs (hard cap 10) |
 | MAX_CONCURRENT_JOBS | 3 | Concurrent workers in a batch |
 | MAX_REDIRECTS | 3 | Maximum static redirects |
+| IPQS_API_KEY | unset | IPQualityScore reputation API key |
+| TURNSTILE_SITE_KEY | unset | Public Cloudflare Turnstile site key |
+| TURNSTILE_SECRET_KEY | unset | Private Cloudflare Turnstile verification secret |
+| CHALLENGE_SIGNING_SECRET | unset | Random signing secret, at least 32 characters |
 | PLAYWRIGHT_EXECUTABLE_PATH | unset | Optional Chromium executable path, e.g. `/usr/bin/chromium` on Alpine |
+
+## Custom errors and VPN/proxy challenge
+
+- `GET /challenge` displays the browser challenge when configured.
+- `POST /challenge/verify` accepts JSON `{ "token": "<Turnstile response token>" }` and issues a signed, HttpOnly, Secure, SameSite=Lax cookie bound to the IP for 30 minutes.
+- Risk checks use IPQualityScore flags for VPN, proxy, Tor, recent abuse, or fraud score >= 85. The feature activates only when all four environment variables above are configured.
+- Store private keys in Vercel Environment Variables, never in source control. Generate a strong random `CHALLENGE_SIGNING_SECRET` of 32+ characters. Ensure the Turnstile site key and secret belong to the same widget.
+- On Vercel, ensure the platform-provided `x-real-ip` or `x-forwarded-for` value is trustworthy for the project's deployment path. Do not use behind an untrusted proxy.
+- HTTP 1998 is not a valid HTTP status; this uses HTTP 403 plus application code `1998`.
 
 ## API reference
 
