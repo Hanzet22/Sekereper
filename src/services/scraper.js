@@ -87,7 +87,7 @@ function detectChallenge(html) {
   const cloudflareMarker = /cf-chl-|__cf_chl|challenge-platform|cdn-cgi.*challenge-platform/.test(normalizedHtml);
   const challengeTitle = /^(just a moment\.?|attention required!?|security check required)$/i.test(title);
   const challengePhrase = /verify you are human|checking your browser|performing security verification|enable javascript and cookies to continue|complete the security check|please wait while we verify/.test(normalizedBody);
-  if (cloudflareMarker || (challengeTitle && challengePhrase)) return 'cloudflare_challenge';
+  if (cloudflareMarker || (/^just a moment\\.?$/i.test(title) && challengePhrase)) return 'cloudflare_challenge';
   if (challengePhrase || /access denied by security policy|automated requests are not allowed/.test(normalizedBody)) return 'anti_bot_challenge';
   return null;
 }
