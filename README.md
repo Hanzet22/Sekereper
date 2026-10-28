@@ -59,12 +59,21 @@ If you modify this program and make it available for users to interact with over
 
 ## Requirements and setup
 
-Requirements: Node.js 20+, npm, and Playwright-supported Chromium dependencies.
+Requirements: Node.js 20+, npm, and a Chromium browser compatible with the runtime.
 
     npm install
     npx playwright install chromium
     cp .env.example .env
     npm start
+
+### Alpine Linux / Acode (ARM64)
+
+Playwright's downloaded Chromium build targets glibc and may not launch on Alpine's musl runtime even when the executable file exists. Prefer Alpine's packaged Chromium:
+
+    apk add chromium
+    PLAYWRIGHT_EXECUTABLE_PATH=/usr/bin/chromium npm start
+
+Keep that environment variable set for every process that runs dynamic scraping. If your package repository installs Chromium at a different path, use that exact path. Static scraping does not require a browser. The app now returns an actionable launch error when Chromium is missing or cannot be spawned.
 
 API default: http://127.0.0.1:3131.
 
