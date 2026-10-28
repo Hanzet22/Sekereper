@@ -183,4 +183,9 @@ function createApp() {
   });
   return app;
 }
-module.exports = { createApp };
+// Export the Express application for Vercel's Node runtime while preserving
+// the factory used by the standalone server and tests.
+const app = createApp();
+module.exports = app;
+module.exports.createApp = createApp;
+
