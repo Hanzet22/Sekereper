@@ -7,6 +7,19 @@ const cheerio = require('cheerio');
 const { chromium: playwrightChromium } = require('playwright-core');
 const serverlessChromium = require('@sparticuz/chromium');
 const { config } = require('../config');
+
+// In batch mode several workers can request Chromium at once. Share one extraction
+// promise so concurrent calls cannot race while writing /tmp/chromium.
+let chromiumExecutablePathPromise;
+function getChromiumExecutablePath() {
+  if (!chromiumExecutablePathPromise) {
+    chromiumExecutablePathPromise = serverlessChromium.executablePath().catch(error => {
+      chromiumExecutablePathPromise = undefined;
+      throw error;
+    });
+  }
+  return chromiumExecutablePathPromise;
+}
 const { validateTarget, isPublicAddress, resolveHostname } = require('../security/url-policy');
 
 function safeLookup(hostname, options, callback) {
@@ -147,7 +160,7 @@ async function fetchDynamic(inputUrl, signal) {
   try {
     // Use the Chromium binary bundled for serverless Linux environments such as Vercel.
     // Keep the existing validated-host resolver pin and all same-origin request guards.
-    const executablePath = configuredBrowser || await serverlessChromium.executablePath();
+    const executablePath = configuredBrowser || await getChromiumExecutablePath();
     const args = [...serverlessChromium.args, ...(resolverRule ? [resolverRule] : [])];
     browser = await playwrightChromium.launch({
       headless: true,
