@@ -108,6 +108,22 @@ async function resolveHostname(hostname) {
   }
   if (records.length) return records;
 
+  // dns.resolve* talks to configured DNS servers directly. Some container,
+  // Android/PRoot, and hosting environments only support the OS getaddrinfo path.
+  // Try that independent resolver before making outbound DoH requests.
+  const systemLookup = await new Promise(resolve => {
+    dns.lookup(hostname, { all: true, verbatim: true }, (error, addresses) => {
+      if (error) resolve({ error });
+      else resolve({ addresses });
+    });
+  });
+  if (systemLookup.addresses?.length) {
+    return systemLookup.addresses.map(record => ({
+      address: record.address,
+      family: record.family,
+    }));
+  }
+
   const dohResults = await Promise.allSettled([
     resolveDoh(hostname, 'A'),
     resolveDoh(hostname, 'AAAA'),
@@ -121,10 +137,12 @@ async function resolveHostname(hostname) {
   const reasons = [
     ...results.filter(result => result.status === 'rejected')
       .map(result => result.reason?.code || result.reason?.message),
+    systemLookup.error?.code || systemLookup.error?.message,
     ...dohResults.filter(result => result.status === 'rejected')
       .map(result => result.reason?.message),
   ].filter(Boolean);
-  const error = new Error('DNS lookup failed: ' + [...new Set(reasons)].join(' | '));
+  const error = new Error('DNS lookup failed after native DNS, system lookup, and DNS-over-HTTPS: ' +
+    [...new Set(reasons)].join(' | '));
   error.code = 'ENOTFOUND';
   throw error;
 }
