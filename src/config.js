@@ -19,7 +19,7 @@ const config = Object.freeze({
     ? 'http://127.0.0.1:3000,http://localhost:3000'
     : process.env.CORS_ORIGINS)
     .split(',').map(v => v.trim()).filter(Boolean),
-  requestTimeoutMs: positiveInt('REQUEST_TIMEOUT_MS', 15000, 120000),
+  requestTimeoutMs: positiveInt('REQUEST_TIMEOUT_MS', 180000, 180000),
   maxResponseBytes: positiveInt('MAX_RESPONSE_BYTES', 3000000, 20000000),
   maxBatchSize: positiveInt('MAX_BATCH_SIZE', 5, 10),
   maxConcurrentJobs: positiveInt('MAX_CONCURRENT_JOBS', 3, 10),
