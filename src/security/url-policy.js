@@ -1,6 +1,7 @@
 'use strict';
 
 const dns = require('node:dns/promises');
+const https = require('node:https');
 const net = require('node:net');
 const ipaddr = require('ipaddr.js');
 
@@ -16,9 +17,82 @@ function isPublicAddress(address) {
   }
 }
 
-// dns.lookup() uses the OS getaddrinfo path, which can fail in Android/PRoot
-// environments even when Node's c-ares DNS resolver can resolve public hosts.
-// Resolve A and AAAA records directly, then keep the existing SSRF checks.
+// Query DNS-over-HTTPS by connecting to the resolver's IP directly. This avoids
+// needing working OS/c-ares DNS just to reach the fallback resolver.
+function queryDoh(hostname, type, provider) {
+  return new Promise((resolve, reject) => {
+    const path = provider.name === 'cloudflare'
+      ? '/dns-query?name=' + encodeURIComponent(hostname) + '&type=' + type
+      : '/resolve?name=' + encodeURIComponent(hostname) + '&type=' + type;
+    const request = https.request({
+      hostname: provider.ip,
+      servername: provider.host,
+      path,
+      method: 'GET',
+      headers: {
+        host: provider.host,
+        accept: provider.name === 'cloudflare' ? 'application/dns-json' : 'application/dns-json',
+        'user-agent': 'HANZET-SCRAPER/3.5 DNS fallback',
+      },
+      timeout: 4500,
+    }, response => {
+      const chunks = [];
+      let size = 0;
+      response.on('data', chunk => {
+        size += chunk.length;
+        if (size > 65536) {
+          request.destroy(new Error('DNS-over-HTTPS response too large'));
+          return;
+        }
+        chunks.push(chunk);
+      });
+      response.on('end', () => {
+        if (response.statusCode !== 200) {
+          reject(new Error(provider.name + ' DoH returned HTTP ' + response.statusCode));
+          return;
+        }
+        try {
+          const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+          const wantedType = type === 'A' ? 1 : 28;
+          const records = (body.Answer || [])
+            .filter(record => record.type === wantedType && net.isIP(record.data) === (type === 'A' ? 4 : 6))
+            .map(record => ({ address: record.data, family: type === 'A' ? 4 : 6 }));
+          resolve(records);
+        } catch (error) {
+          reject(error);
+        }
+      });
+      response.on('error', reject);
+    });
+    request.on('timeout', () => request.destroy(new Error(provider.name + ' DoH timed out')));
+    request.on('error', reject);
+    request.end();
+  });
+}
+
+async function resolveDoh(hostname, type) {
+  const providers = [
+    { name: 'cloudflare', ip: '1.1.1.1', host: 'cloudflare-dns.com' },
+    { name: 'google', ip: '8.8.8.8', host: 'dns.google' },
+  ];
+  const errors = [];
+  for (const provider of providers) {
+    try {
+      const records = await queryDoh(hostname, type, provider);
+      if (records.length) return records;
+      // An empty successful answer is authoritative; try the other provider
+      // in case the first resolver returned a transient/incomplete response.
+      errors.push(provider.name + ': no ' + type + ' records');
+    } catch (error) {
+      errors.push(provider.name + ': ' + (error.code || error.message));
+    }
+  }
+  throw new Error(errors.join('; '));
+}
+
+// Prefer the native Node resolver. If it cannot resolve anything (common in
+// restricted Android/PRoot DNS setups), retry through DNS-over-HTTPS by IP.
+// SSRF validation is still applied to every returned address by validateTarget.
 async function resolveHostname(hostname) {
   const results = await Promise.allSettled([
     dns.resolve4(hostname),
@@ -32,16 +106,27 @@ async function resolveHostname(hostname) {
       for (const address of result.value) records.push({ address, family });
     }
   }
-  if (!records.length) {
-    const reasons = results
-      .filter(result => result.status === 'rejected')
-      .map(result => result.reason?.code || result.reason?.message)
-      .filter(Boolean);
-    const error = new Error('DNS lookup failed' + (reasons.length ? ': ' + [...new Set(reasons)].join(', ') : ''));
-    error.code = 'ENOTFOUND';
-    throw error;
+  if (records.length) return records;
+
+  const dohResults = await Promise.allSettled([
+    resolveDoh(hostname, 'A'),
+    resolveDoh(hostname, 'AAAA'),
+  ]);
+  for (let i = 0; i < dohResults.length; i++) {
+    const result = dohResults[i];
+    if (result.status === 'fulfilled') records.push(...result.value);
   }
-  return records;
+  if (records.length) return records;
+
+  const reasons = [
+    ...results.filter(result => result.status === 'rejected')
+      .map(result => result.reason?.code || result.reason?.message),
+    ...dohResults.filter(result => result.status === 'rejected')
+      .map(result => result.reason?.message),
+  ].filter(Boolean);
+  const error = new Error('DNS lookup failed: ' + [...new Set(reasons)].join(' | '));
+  error.code = 'ENOTFOUND';
+  throw error;
 }
 
 async function validateTarget(input) {
@@ -57,7 +142,7 @@ async function validateTarget(input) {
     throw new Error('Only standard HTTP/HTTPS ports are allowed');
   }
 
-  const hostname = url.hostname.replace(/^\\[|\\]$/g, '').toLowerCase();
+  const hostname = url.hostname.replace(/^\[|\]$/g, '').toLowerCase();
   if (net.isIP(hostname)) {
     if (!isPublicAddress(hostname)) throw new Error('Private, loopback, or reserved IP targets are not allowed');
     url._publicAddresses = [hostname];
@@ -65,7 +150,7 @@ async function validateTarget(input) {
     let records;
     try { records = await resolveHostname(hostname); }
     catch (error) {
-      throw new Error('Target hostname could not be resolved (' + (error.code || error.message) + ')');
+      throw new Error('Target hostname could not be resolved (' + (error.message || error.code) + ')');
     }
     if (!records.length || records.some(record => !isPublicAddress(record.address))) {
       throw new Error('Target resolves to a private, loopback, or reserved IP address');
