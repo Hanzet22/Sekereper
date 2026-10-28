@@ -1,11 +1,18 @@
-# Helo ges Welkom Bak Tu Mai mainkeraft canel, disini cuma adanya
+# Ello ges welkom bak tu may mainkeraft canel AWOKAWOKAWOK,
+# ngapain brekku? Gabut amat main kesini, gak ada .env ya buatmu awokawokawok,
+# oh sama satu lagi, kita cuma ada
 User-agent: *
 Disallow: /disallow
-Disallow: /free robux
-Disallow: /gran turismo bajakan 100% free no Virus
-Allow: /Gila Mennnn
+Disallow: /disallow/disallow
+Disallow: /disallow/disallow/disallow/
+Disallow: /disallow/disallow/disallow/disallow/
+Disallow: /disallow/disallow/disallow/disallow/disallow/disallow/disallow/
+Disallow: /free%20robux%20working%20100%25
+Disallow: /Gran%20Turismo%20sport%20Bajakan%20free
+Disallow: /maling%20akun%20.env
+Allow: /sanitiy%20developer
 Allow: /awokawokawok
 
-# Dan elu ngapain disini? Gak ada .env sini awokawokawok,
-# lu kira kayak web sebelah masukin .env di robots.txt walau udah make WAF?
-# Sori ye awokawokawok
+# Dah keluar aja sana cari Warung Nasi Ferrari awokawokawok,
+# gak ada .env buat lu kerok apalagi .git, lawak banget bradarrrrrrrrrrrrrrrr,
+# kalau mau Scrape lu ngescrape scrape yg online runtime scrape jierrrrr
