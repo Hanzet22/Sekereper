@@ -59,14 +59,16 @@ test('HTML5 workbench and split UI assets are served by Express', async t => {
     const html = await pageResponse.text();
     assert.match(html, /<!doctype html>/i);
     assert.match(html, /ui\/css\/app\.css/);
-    assert.match(html, /ui\/js\/app\.js/);
+    assert.match(html, /ui\/js\/legal-notice\.js/);
     assert.doesNotMatch(html, /<style\b/i);
     const scriptTags = html.match(/<script\b[^>]*>/gi) || [];
     assert.equal(scriptTags.filter(tag => !/\bsrc=/i.test(tag)).length, 0);
     const assets = [
       ['/ui/css/app.css', /--bg:/],
+      ['/ui/css/legal-notice.css', /legal-overlay/],
       ['/ui/css/tailwind.css', /\.sr-only/],
       ['/ui/js/app.js', /function apiUrl/],
+      ['/ui/js/legal-notice.js', /legal-ack-v1/],
       ['/ui/js/ambient-canvas.js', /paintWorklet/],
       ['/ui/worklets/hanzet-grid.js', /registerPaint/],
       ['/ui/assets/icons.svg', /icon-brand/],
