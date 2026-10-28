@@ -174,6 +174,9 @@ function createApp() {
 
   app.use((req, res) => res.status(404).json({ error: 'Not found' }));
   app.use((error, _req, res, _next) => {
+    if (error?.type === 'entity.too.large' || error?.status === 413 || error?.statusCode === 413) {
+      return res.status(413).json({ error: 'Request body exceeds the 32kb limit' });
+    }
     if (error instanceof SyntaxError && 'body' in error) return res.status(400).json({ error: 'Invalid JSON body' });
     console.error('[HANZET-SCRAPER] Unhandled request error:', error.message);
     return res.status(500).json({ error: 'Internal server error' });
