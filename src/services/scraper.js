@@ -2,15 +2,14 @@
 
 const https = require('node:https');
 const http = require('node:http');
-const { lookup } = require('node:dns/promises');
 const net = require('node:net');
 const cheerio = require('cheerio');
 const { chromium } = require('playwright');
 const { config } = require('../config');
-const { validateTarget, isPublicAddress } = require('../security/url-policy');
+const { validateTarget, isPublicAddress, resolveHostname } = require('../security/url-policy');
 
 function safeLookup(hostname, options, callback) {
-  lookup(hostname, { all: true, verbatim: true }).then(records => {
+  resolveHostname(hostname).then(records => {
     if (!records.length || records.some(r => !isPublicAddress(r.address))) {
       return callback(new Error('Target resolved to a non-public address'));
     }
