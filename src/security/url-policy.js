@@ -16,6 +16,34 @@ function isPublicAddress(address) {
   }
 }
 
+// dns.lookup() uses the OS getaddrinfo path, which can fail in Android/PRoot
+// environments even when Node's c-ares DNS resolver can resolve public hosts.
+// Resolve A and AAAA records directly, then keep the existing SSRF checks.
+async function resolveHostname(hostname) {
+  const results = await Promise.allSettled([
+    dns.resolve4(hostname),
+    dns.resolve6(hostname),
+  ]);
+  const records = [];
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    if (result.status === 'fulfilled') {
+      const family = i === 0 ? 4 : 6;
+      for (const address of result.value) records.push({ address, family });
+    }
+  }
+  if (!records.length) {
+    const reasons = results
+      .filter(result => result.status === 'rejected')
+      .map(result => result.reason?.code || result.reason?.message)
+      .filter(Boolean);
+    const error = new Error('DNS lookup failed' + (reasons.length ? ': ' + [...new Set(reasons)].join(', ') : ''));
+    error.code = 'ENOTFOUND';
+    throw error;
+  }
+  return records;
+}
+
 async function validateTarget(input) {
   let url;
   try { url = new URL(input); } catch { throw new Error('Invalid URL'); }
@@ -29,14 +57,16 @@ async function validateTarget(input) {
     throw new Error('Only standard HTTP/HTTPS ports are allowed');
   }
 
-  const hostname = url.hostname.replace(/^\[|\]$/g, '').toLowerCase();
+  const hostname = url.hostname.replace(/^\\[|\\]$/g, '').toLowerCase();
   if (net.isIP(hostname)) {
     if (!isPublicAddress(hostname)) throw new Error('Private, loopback, or reserved IP targets are not allowed');
     url._publicAddresses = [hostname];
   } else {
     let records;
-    try { records = await dns.lookup(hostname, { all: true, verbatim: true }); }
-    catch { throw new Error('Target hostname could not be resolved'); }
+    try { records = await resolveHostname(hostname); }
+    catch (error) {
+      throw new Error('Target hostname could not be resolved (' + (error.code || error.message) + ')');
+    }
     if (!records.length || records.some(record => !isPublicAddress(record.address))) {
       throw new Error('Target resolves to a private, loopback, or reserved IP address');
     }
@@ -46,4 +76,4 @@ async function validateTarget(input) {
   return url;
 }
 
-module.exports = { validateTarget, isPublicAddress };
+module.exports = { validateTarget, isPublicAddress, resolveHostname };
