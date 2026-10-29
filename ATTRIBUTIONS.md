@@ -6,6 +6,19 @@
 - Project license: **GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later)**. See [LICENSE](./LICENSE).
 - The project license covers this project's own copyrightable material only; it does not replace or override third-party licenses.
 
+## Error-page video assets
+
+These externally hosted MP4s are displayed on the matching HTML error pages. The Catbox links are used for playback; the original-post links and titles below identify the source references provided for each video. Attribution does not itself grant a license or confirm permission to redistribute or embed third-party media. Rights remain with the respective creators or rights holders.
+
+| HTTP status | Hosted video | Original source | Title / description |
+|---|---|---|---|
+| **404 — Page Not Found** | [Catbox MP4](https://files.catbox.moe/yfd0hd.mp4) | [ASML on X](https://x.com/ASMLcompany/status/2069359810638696769) | *Making advanced chips requires more than advanced lithography.* The animation highlights how metrology, inspection, and computational lithography work together in chip manufacturing. |
+| **418 — I'm a Teapot** | [Catbox MP4](https://files.catbox.moe/06uaw4.mp4) | [FurryGintan on X](https://x.com/FurryGintan/status/2105046499369599098) | 🔵🐸 |
+| **403 — Forbidden** | [Catbox MP4](https://files.catbox.moe/v2xl73.mp4) | [YouTube Shorts](https://youtube.com/shorts/qzXwpAejVSw?si=-O_XJOUgLIxtmDic) | *I Get Knocked Out! #simpsons #meme #bartsimpson #chairposting* |
+| **429 — Too Many Requests** | [Catbox MP4](https://files.catbox.moe/9yah42.mp4) | [YouTube](https://youtu.be/ULMgiajXqtQ?si=E_O4VTg7va_a_1Ko) | *It's Not My Wallet, BRUH* — SpongeBob in The Hood #31, Hood VO Toons Parodies. |
+
+The video player is rendered only for matching HTML error responses. API clients receiving JSON error responses do not receive the embedded player. The videos load from Catbox at request time and may fail if the host or source file becomes unavailable. Confirm applicable permissions and platform terms before production use.
+
 ## Runtime dependencies
 
 The following are direct dependencies declared in `package.json`. Their upstream licenses are listed for attribution and compliance review; consult each package's own distributed license and notices for the exact terms applicable to the version installed.
