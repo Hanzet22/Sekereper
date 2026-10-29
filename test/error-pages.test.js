@@ -23,3 +23,19 @@ test('custom pages expose the requested status/application codes', () => {
 });
 
 test('challenge page exposes Turnstile widget and verification route', () => { const page = renderChallengePage('public-site-key'); assert.match(page, /challenges.cloudflare.com\/turnstile/); assert.match(page, /\/challenge\/verify/); assert.match(page, /public-site-key/); assert.doesNotMatch(page, /TURNSTILE_SECRET_KEY/); });
+
+test('matching HTTP error pages include their configured video', () => {
+  const videos = new Map([
+    [403, 'https://files.catbox.moe/v2xl73.mp4'],
+    [404, 'https://files.catbox.moe/yfd0hd.mp4'],
+    [418, 'https://files.catbox.moe/06uaw4.mp4'],
+    [429, 'https://files.catbox.moe/9yah42.mp4'],
+  ]);
+  for (const [status, url] of videos) {
+    const page = renderErrorPage({ status, code: String(status), title: 'Test', message: 'Test message' });
+    assert.ok(page.includes(url), `status ${status} should include its video`);
+    assert.match(page, /<video controls autoplay muted loop playsinline preload="metadata">/);
+  }
+  const otherPage = renderErrorPage({ status: 413, code: '413', title: 'Payload Too Large', message: 'Too large' });
+  assert.doesNotMatch(otherPage, /files\.catbox\.moe/);
+});
