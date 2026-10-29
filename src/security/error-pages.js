@@ -7,10 +7,22 @@ function escapeHtml(value) {
 }
 
 const ERROR_PAGE_VIDEOS = Object.freeze({
-  '403': 'https://files.catbox.moe/v2xl73.mp4',
-  '404': 'https://files.catbox.moe/yfd0hd.mp4',
-  '418': 'https://files.catbox.moe/06uaw4.mp4',
-  '429': 'https://files.catbox.moe/9yah42.mp4',
+  '403': Object.freeze({
+    src: 'https://files.catbox.moe/v2xl73.mp4',
+    description: 'Access denied: this request is not allowed. The Simpsons chair meme adds a reaction-style punchline to a blocked request.',
+  }),
+  '404': Object.freeze({
+    src: 'https://files.catbox.moe/yfd0hd.mp4',
+    description: 'Page not found. This clip highlights the precision technologies behind advanced chipmaking—a reminder that even sophisticated technology cannot make a missing URL exist.',
+  }),
+  '418': Object.freeze({
+    src: 'https://files.catbox.moe/06uaw4.mp4',
+    description: 'HTTP 418 is the deliberately silly “I’m a teapot” status. This blue-frog meme clip keeps that response weird and playful.',
+  }),
+  '429': Object.freeze({
+    src: 'https://files.catbox.moe/9yah42.mp4',
+    description: 'Too many requests. The SpongeBob in the Hood parody and its “It’s Not My Wallet, BRUH” gag provide a comedic reaction to hitting the rate limit.',
+  }),
 });
 
 function renderErrorPage({ status, code, title, message, detail }) {
@@ -18,9 +30,9 @@ function renderErrorPage({ status, code, title, message, detail }) {
   const safeCode = escapeHtml(code || status);
   const safeMessage = escapeHtml(message || 'The request could not be completed.');
   const safeDetail = detail ? escapeHtml(detail) : '';
-  const videoUrl = ERROR_PAGE_VIDEOS[String(status)];
-  const videoMarkup = videoUrl
-    ? '<section class="error-media" aria-label="Error video"><video controls autoplay muted loop playsinline preload="metadata"><source src="' + videoUrl + '" type="video/mp4">Your browser does not support embedded video.</video><p class="media-note">Error-page video. Playback may be unavailable if the external host is down.</p></section>'
+  const video = ERROR_PAGE_VIDEOS[String(status)];
+  const videoMarkup = video
+    ? '<section class="error-media" aria-label="Error video"><video controls autoplay muted loop playsinline preload="metadata"><source src="' + video.src + '" type="video/mp4">Your browser does not support embedded video.</video><p class="media-description">' + escapeHtml(video.description) + '</p><p class="media-note">Video playback may be unavailable if the external host is down.</p></section>'
     : '';
   return `<!doctype html>
 <html lang="en">
@@ -35,7 +47,7 @@ function renderErrorPage({ status, code, title, message, detail }) {
 *{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 15% 5%,#172554 0,transparent 42%),radial-gradient(ellipse at 90% 95%,#3f1d2e 0,transparent 38%),#080c16}
 main{width:min(100%,720px);border:1px solid #334155;border-radius:24px;padding:clamp(24px,6vw,52px);background:rgba(15,23,42,.88);box-shadow:0 24px 90px #0008}
 .brand{font-size:.78rem;letter-spacing:.22em;color:#93c5fd;font-weight:800}.code{font-size:clamp(4rem,15vw,8rem);line-height:1;margin:24px 0 12px;font-weight:900;letter-spacing:-.08em;color:#f8fafc;text-shadow:0 0 36px #60a5fa33;overflow-wrap:anywhere}
-h1{font-size:clamp(1.5rem,4vw,2.2rem);margin:0 0 14px}p{line-height:1.7;color:#cbd5e1;margin:10px 0}.detail{margin-top:24px;padding:14px 16px;border-left:3px solid #60a5fa;background:#0b1220;border-radius:0 10px 10px 0;font-size:.92rem}.error-media{margin-top:24px}.error-media video{display:block;width:100%;max-height:420px;aspect-ratio:16/9;object-fit:contain;background:#020617;border:1px solid #334155;border-radius:14px}.media-note{font-size:.78rem;color:#94a3b8}
+h1{font-size:clamp(1.5rem,4vw,2.2rem);margin:0 0 14px}p{line-height:1.7;color:#cbd5e1;margin:10px 0}.detail{margin-top:24px;padding:14px 16px;border-left:3px solid #60a5fa;background:#0b1220;border-radius:0 10px 10px 0;font-size:.92rem}.error-media{margin-top:24px}.error-media video{display:block;width:100%;max-height:420px;aspect-ratio:16/9;object-fit:contain;background:#020617;border:1px solid #334155;border-radius:14px}.media-description{font-size:.92rem;color:#cbd5e1;margin:12px 2px 4px}.media-note{font-size:.78rem;color:#94a3b8}
 a{display:inline-flex;margin-top:26px;padding:12px 18px;border-radius:12px;background:#dbeafe;color:#0f172a;text-decoration:none;font-weight:800}a:focus-visible{outline:3px solid #fbbf24;outline-offset:3px}.foot{margin-top:28px;font-size:.75rem;color:#64748b;letter-spacing:.08em}
 </style>
 </head>
