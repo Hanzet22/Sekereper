@@ -24,18 +24,22 @@ test('custom pages expose the requested status/application codes', () => {
 
 test('challenge page exposes Turnstile widget and verification route', () => { const page = renderChallengePage('public-site-key'); assert.match(page, /challenges.cloudflare.com\/turnstile/); assert.match(page, /\/challenge\/verify/); assert.match(page, /public-site-key/); assert.doesNotMatch(page, /TURNSTILE_SECRET_KEY/); });
 
-test('matching HTTP error pages include their configured video', () => {
+test('matching HTTP error pages include their configured video and contextual description', () => {
   const videos = new Map([
-    [403, 'https://files.catbox.moe/v2xl73.mp4'],
-    [404, 'https://files.catbox.moe/yfd0hd.mp4'],
-    [418, 'https://files.catbox.moe/06uaw4.mp4'],
-    [429, 'https://files.catbox.moe/9yah42.mp4'],
+    [403, { url: 'https://files.catbox.moe/v2xl73.mp4', description: 'The Simpsons chair meme' }],
+    [404, { url: 'https://files.catbox.moe/yfd0hd.mp4', description: 'advanced chipmaking' }],
+    [418, { url: 'https://files.catbox.moe/06uaw4.mp4', description: 'blue-frog meme clip' }],
+    [429, { url: 'https://files.catbox.moe/9yah42.mp4', description: 'SpongeBob in the Hood parody' }],
   ]);
-  for (const [status, url] of videos) {
+  for (const [status, expected] of videos) {
     const page = renderErrorPage({ status, code: String(status), title: 'Test', message: 'Test message' });
-    assert.ok(page.includes(url), `status ${status} should include its video`);
+    assert.ok(page.includes(expected.url), `status ${status} should include its video`);
+    assert.ok(page.includes(expected.description), `status ${status} should describe its video`);
     assert.match(page, /<video controls autoplay muted loop playsinline preload="metadata">/);
+    assert.match(page, /class="media-description"/);
+    assert.match(page, /Video playback may be unavailable if the external host is down/);
   }
   const otherPage = renderErrorPage({ status: 413, code: '413', title: 'Payload Too Large', message: 'Too large' });
   assert.doesNotMatch(otherPage, /files\.catbox\.moe/);
+  assert.doesNotMatch(otherPage, /class="media-description"/);
 });
