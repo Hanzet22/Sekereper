@@ -47,7 +47,7 @@ a{display:inline-flex;margin-top:26px;padding:12px 18px;border-radius:12px;backg
 ${safeDetail ? `<div class="detail">${safeDetail}</div>` : ''}
 ${videoMarkup}
 <a href="/">Return to workbench</a>
-<div class="foot">HANZET-SCRAPER · CUSTOM ERROR SYSTEM · v3.6.0</div>
+<div class="foot">HANZET-SCRAPER · CUSTOM ERROR SYSTEM · v3.7.0</div>
 </main></body></html>`;
 }
 
