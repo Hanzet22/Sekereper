@@ -76,6 +76,8 @@ function createApp() {
   app.get(['/', '/index.html'], (_req, res) => res.sendFile(path.join(projectRoot, 'index.html')));
   // Explicitly serve the root robots.txt; the repository root is otherwise not exposed as static content.
   app.get('/robots.txt', (_req, res) => res.type('text/plain').sendFile(path.join(projectRoot, 'robots.txt')));
+  // Publish the coordinated vulnerability-disclosure contact without exposing other dotfiles.
+  app.get('/.well-known/security.txt', (_req, res) => res.type('text/plain').sendFile(path.join(projectRoot, '.well-known', 'security.txt')));
   app.use('/ui', express.static(path.join(projectRoot, 'ui'), {
     dotfiles: 'deny', index: false, fallthrough: true,
     maxAge: config.nodeEnv === 'production' ? '1h' : 0,
