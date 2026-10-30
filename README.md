@@ -167,7 +167,7 @@ V2 used an inline frontend, Tor proxy support, a root-level rate limiter, and a 
 
 ## License
 
-See LICENSE.
+See [LICENSE](./LICENSE).
 
 
 ## Frontend architecture
