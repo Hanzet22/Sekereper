@@ -15,7 +15,7 @@
     "watch:ui:css": "npx @tailwindcss/cli -i ./ui/css/tailwind.input.css -o ./ui/css/tailwind.css --watch"
   },
   "dependencies": {
-    "@sparticuz/chromium": "^138.0.2",
+    "@sparticuz/chromium": "^153.0.0",
     "cheerio": "^1.0.0",
     "dotenv": "^16.6.1",
     "express": "^5.1.0",
