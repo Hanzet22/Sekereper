@@ -18,6 +18,11 @@ test('health endpoint reports v3.7 capabilities', async t => {
     const body = await response.json();
     assert.equal(body.version, '3.7.0');
     assert.equal(body.status, 'ok');
+    assert.match(response.headers.get('content-security-policy') || '', /default-src 'self'/);
+    assert.match(response.headers.get('content-security-policy') || '', /object-src 'none'/);
+    assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(response.headers.get('x-frame-options'), 'DENY');
+    assert.equal(response.headers.get('strict-transport-security'), null);
     assert.equal(body.capabilities.crawlJobs, true);
     assert.ok(body.capabilities.export.includes('csv'));
   });
