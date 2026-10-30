@@ -5,7 +5,7 @@
   "description": "Modular HTTP(S) crawler and scraper with bounded jobs, exports, and SSRF protections",
   "main": "server.js",
   "engines": {
-    "node": ">=20"
+    "node": "24.x"
   },
   "scripts": {
     "start": "node server.js",
