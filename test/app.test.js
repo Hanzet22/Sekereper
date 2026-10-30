@@ -138,3 +138,15 @@ test('rate limit returns HTTP 429 and Retry-After after the configured burst', a
     assert.match(await last.text(), /Too Many Requests/);
   });
 });
+
+test('security.txt publishes the vulnerability disclosure contact', async t => {
+  await withServer(t, async base => {
+    const response = await fetch(base + '/.well-known/security.txt');
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('content-type') || '', /text\/plain/i);
+    const body = await response.text();
+    assert.match(body, /Contact: https:\/\/github\.com\/Hanzet22\/Sekereper\/security\/advisories\/new/);
+    assert.match(body, /Preferred-Languages: id, en/);
+    assert.match(body, /Expires: 2027-10-30/);
+  });
+});
