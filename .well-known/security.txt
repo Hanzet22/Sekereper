@@ -1,0 +1,5 @@
+Contact: https://github.com/Hanzet22/Sekereper/security/advisories/new
+Expires: 2027-10-30T00:00:00.000Z
+Preferred-Languages: id, en
+Canonical: https://hanzet-sc.vercel.app/.well-known/security.txt
+Policy: https://github.com/Hanzet22/Sekereper/security/advisories/new
